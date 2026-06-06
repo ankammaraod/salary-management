@@ -117,7 +117,7 @@ export default function EmployeesPage() {
         onCancel={closeModal}
         footer={null}
         width={640}
-        destroyOnClose
+        destroyOnHidden
       >
         {modalState.open && (
           <EmployeeForm
