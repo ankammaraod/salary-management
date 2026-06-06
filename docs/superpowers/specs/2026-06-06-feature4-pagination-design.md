@@ -12,10 +12,8 @@ Replace the current all-at-once employee fetch with server-side pagination. The 
 ## Scope
 
 - Server-side `GET /api/employees?page=&pageSize=` endpoint
-- Add Email and Joining Date columns to the employee table (per PRD)
-- Update `ux-design.md` table column spec to match
 
-Not in scope: search (Feature 5), column sorting, column filters.
+Not in scope: adding columns (table stays as designed), search (Feature 5), column sorting, column filters.
 
 ---
 
@@ -120,9 +118,7 @@ React Query caches each page separately. Navigating back to a page already fetch
 - Table `dataSource={data?.employees ?? []}`, `loading={isLoading}`
 - AntD Table `pagination={{ current: page, pageSize: 20, total: data?.total ?? 0, onChange: setPage, showSizeChanger: false }}`
 
-**Column order (per PRD):** ID, Name, Email, Role, Department, Country, Salary, Employment Type, Joining Date, Actions.
-
-Email — plain text. Joining Date — plain text (`YYYY-MM-DD` as stored).
+**Column order (unchanged):** ID, Name, Role, Department, Country, Salary, Employment Type, Actions. Email, Joining Date, and Gender remain in the View modal only.
 
 ---
 
@@ -144,27 +140,4 @@ Email — plain text. Joining Date — plain text (`YYYY-MM-DD` as stored).
 ### Frontend
 
 - `useEmployees` mock returns `{ data: { employees: [...], total: N } }` shape
-- `EmployeesPage` test updated to destructure `data.employees` from mock
-- Tests for new Email and Joining Date columns rendering
-
----
-
-## Docs Update
-
-`docs/ux-design.md` §5.1 table column list updated:
-
-| Column | Notes |
-|---|---|
-| ID | Plain number |
-| Name | Plain text |
-| Email | Plain text |
-| Role | Plain text |
-| Department | Plain text |
-| Country | Plain text |
-| Salary | Currency symbol + `toLocaleString()`, right-aligned |
-| Employment Type | AntD `Tag` — green for Full-time, orange for Contractor |
-| Joining Date | Plain text, `YYYY-MM-DD` |
-| Actions | Single `⋮` icon button (AntD `Dropdown`) |
-
-Remove: "Joining Date, Email, and Gender are not shown in the table — they are visible in the View modal."
-(Gender remains modal-only; Email and Joining Date now appear in the table.)
+- `EmployeesPage` tests updated: `data.employees` instead of `data` for table rows, `data.total` for pagination
