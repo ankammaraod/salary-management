@@ -73,7 +73,7 @@ Software Engineer, Senior Engineer, Engineering Manager, Product Manager, Senior
 ### Data generation
 
 - **Names:** `faker.person.firstName()` + `faker.person.lastName()`
-- **Email:** `faker.internet.email({ firstName, lastName })` with a short UUID fragment appended to guarantee uniqueness (e.g. `alice.smith_a3f1@example.com`)
+- **Email:** `faker.internet.email({ firstName, lastName })` with a loop index suffix to guarantee uniqueness (e.g. `alice.smith_4237@example.com` — the suffix is the row index `i` zero-padded to 4 digits)
 - **Salary:** `faker.number.int({ min, max })` rounded to nearest 100
 - **Joining date:** `faker.date.between({ from: '2016-01-01', to: '2026-06-06' })` formatted as `YYYY-MM-DD`
 
