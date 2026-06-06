@@ -133,6 +133,8 @@ Search queries match against: `id`, `name`, `email`, `role`, `department`, `coun
 
 ## 4. Frontend Architecture
 
+> **UX Design System:** See [`docs/ux-design.md`](ux-design.md) for the complete frontend design system — color tokens, typography, layout shell, component patterns, routing, and interaction rules. All frontend work must follow that document.
+
 ### Tech choices
 
 | Concern | Choice | Reason |

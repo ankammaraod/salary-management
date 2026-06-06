@@ -8,6 +8,7 @@ A salary management web tool for an HR Manager of a 10,000-employee organization
 
 See [`docs/salary-management-prd.md`](docs/salary-management-prd.md) for the full product requirements document.
 See [`docs/architecture.md`](docs/architecture.md) for the full architecture design, folder structure, and coding conventions.
+See [`docs/ux-design.md`](docs/ux-design.md) for the frontend UX design system — colors, layout, component patterns, routing, and interaction rules. All frontend work must follow this document.
 
 ## Living documents
 
