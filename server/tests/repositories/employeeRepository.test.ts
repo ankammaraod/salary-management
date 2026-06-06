@@ -74,6 +74,11 @@ describe('create', () => {
     expect(created.id).toBeDefined();
     expect(created.name).toBe('Alice Johnson');
   });
+
+  it('throws if the row cannot be retrieved after insert', async () => {
+    jest.spyOn(repo, 'findById').mockResolvedValueOnce(null);
+    await expect(repo.create(VALID_DTO)).rejects.toThrow('failed to retrieve employee after insert');
+  });
 });
 
 describe('update', () => {
@@ -81,6 +86,12 @@ describe('update', () => {
     const created = await repo.create(VALID_DTO);
     const updated = await repo.update(created.id, { ...VALID_DTO, salary: 95000 });
     expect(updated.salary).toBe(95000);
+  });
+
+  it('throws if the row cannot be retrieved after update', async () => {
+    const created = await repo.create(VALID_DTO);
+    jest.spyOn(repo, 'findById').mockResolvedValueOnce(null);
+    await expect(repo.update(created.id, { ...VALID_DTO, salary: 99000 })).rejects.toThrow('failed to retrieve employee after update');
   });
 });
 

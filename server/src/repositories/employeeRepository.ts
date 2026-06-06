@@ -27,12 +27,16 @@ export class EmployeeRepository implements IEmployeeRepository {
 
   async create(dto: CreateEmployeeDto): Promise<Employee> {
     const [id] = await this.knex('employees').insert(dto);
-    return this.findById(id) as Promise<Employee>;
+    const created = await this.findById(id);
+    if (!created) throw new Error('failed to retrieve employee after insert');
+    return created;
   }
 
   async update(id: number, dto: CreateEmployeeDto): Promise<Employee> {
     await this.knex('employees').where({ id }).update(dto);
-    return this.findById(id) as Promise<Employee>;
+    const updated = await this.findById(id);
+    if (!updated) throw new Error('failed to retrieve employee after update');
+    return updated;
   }
 
   async deleteById(id: number): Promise<void> {
