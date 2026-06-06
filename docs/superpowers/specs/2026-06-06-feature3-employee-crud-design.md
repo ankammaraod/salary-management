@@ -55,13 +55,13 @@ Route → Service → Repository → SQLite
 
 | Method | Path | Success | Errors |
 |---|---|---|---|
-| `GET` | `/api/employees` | 200 `{ employees: Employee[], total: number }` | — |
+| `GET` | `/api/employees` | 200 `Employee[]` | — |
 | `GET` | `/api/employees/:id` | 200 `Employee` | 404 |
 | `POST` | `/api/employees` | 201 `Employee` | 400 validation, 409 duplicate email |
 | `PUT` | `/api/employees/:id` | 200 `Employee` | 400 validation, 404, 409 duplicate email |
 | `DELETE` | `/api/employees/:id` | 204 (no body) | 404 |
 
-**`GET /api/employees`** — returns all employees in this feature (no pagination). Feature 4 adds `page` and `pageSize` query params.
+**`GET /api/employees`** — returns all employees as a plain array. Feature 4 adds pagination params and wraps the response in `{ employees, total, page, pageSize }`.
 
 ---
 
@@ -84,7 +84,6 @@ interface Employee {
 }
 
 type CreateEmployeeDto = Omit<Employee, 'id'>;
-type UpdateEmployeeDto = Omit<Employee, 'id'>;
 ```
 
 ---
@@ -145,26 +144,13 @@ interface IEmployeeRepository {
   findById(id: number): Promise<Employee | null>;
   findByEmail(email: string): Promise<Employee | null>;
   create(dto: CreateEmployeeDto): Promise<Employee>;
-  update(id: number, dto: UpdateEmployeeDto): Promise<Employee>;
+  update(id: number, dto: CreateEmployeeDto): Promise<Employee>;
   deleteById(id: number): Promise<void>;
 }
 ```
 
 ---
 
-## Backend — Service Interface
-
-```typescript
-interface IEmployeeService {
-  listEmployees(): Promise<{ employees: Employee[]; total: number }>;
-  getEmployee(id: number): Promise<Employee>;
-  createEmployee(dto: CreateEmployeeDto): Promise<Employee>;
-  updateEmployee(id: number, dto: UpdateEmployeeDto): Promise<Employee>;
-  deleteEmployee(id: number): Promise<void>;
-}
-```
-
----
 
 ## Frontend — File Map
 

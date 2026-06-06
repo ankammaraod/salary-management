@@ -14,11 +14,11 @@
 
 | Action | Path | Purpose |
 |---|---|---|
-| Create | `server/src/types/employee.ts` | Employee, CreateEmployeeDto, UpdateEmployeeDto |
+| Create | `server/src/types/employee.ts` | Employee and CreateEmployeeDto types |
 | Create | `server/src/middleware/errors.ts` | ValidationError, NotFoundError, ConflictError |
 | Modify | `server/src/middleware/errorHandler.ts` | Read `error.status` for correct HTTP code |
 | Create | `server/src/repositories/employeeRepository.ts` | IEmployeeRepository + EmployeeRepository |
-| Create | `server/src/services/employeeService.ts` | IEmployeeService + EmployeeService |
+| Create | `server/src/services/employeeService.ts` | EmployeeService with validation |
 | Create | `server/src/routes/employees.ts` | Express router factory |
 | Modify | `server/src/app.ts` | Wire employee router + errorHandler + notFound |
 | Create | `server/tests/repositories/employeeRepository.test.ts` | Repository integration tests |
@@ -27,7 +27,7 @@
 | Modify | `client/package.json` | Add vitest, RTL, dayjs, @ant-design/icons |
 | Modify | `client/vite.config.ts` | Add vitest test config block |
 | Create | `client/src/test-setup.ts` | @testing-library/jest-dom import |
-| Create | `client/src/types/employee.ts` | Employee, CreateEmployeeDto types |
+| Create | `client/src/types/employee.ts` | Employee and CreateEmployeeDto types |
 | Create | `client/src/api/employees.ts` | Fetch functions |
 | Create | `client/src/hooks/useEmployees.ts` | React Query list hook |
 | Create | `client/src/hooks/useEmployee.ts` | React Query single hook |
@@ -39,7 +39,7 @@
 | Create | `client/src/components/__tests__/EmployeeList.test.tsx` | RTL tests |
 | Create | `client/src/components/__tests__/EmployeeForm.test.tsx` | RTL tests |
 | Create | `client/src/pages/EmployeesPage.tsx` | Page shell, owns panelState |
-| Modify | `client/src/App.tsx` | Add /employees route + redirect |
+| Modify | `client/src/App.tsx` | Add /employees route, redirect / → /employees |
 
 ---
 
@@ -50,7 +50,7 @@
 - Create: `server/src/middleware/errors.ts`
 - Modify: `server/src/middleware/errorHandler.ts`
 
-- [ ] **Step 1: Create shared server types**
+- [ ] **Step 1: Create server types**
 
 Create `server/src/types/employee.ts`:
 
@@ -69,7 +69,6 @@ export interface Employee {
 }
 
 export type CreateEmployeeDto = Omit<Employee, 'id'>;
-export type UpdateEmployeeDto = Omit<Employee, 'id'>;
 ```
 
 - [ ] **Step 2: Create error classes**
@@ -104,7 +103,7 @@ export class ConflictError extends Error {
 
 - [ ] **Step 3: Update errorHandler to use error.status**
 
-Replace the contents of `server/src/middleware/errorHandler.ts`:
+Replace `server/src/middleware/errorHandler.ts`:
 
 ```typescript
 import { NextFunction, Request, Response } from 'express';
@@ -129,7 +128,7 @@ Run from `server/`:
 npm test
 ```
 
-Expected: `1 passed` (health check test).
+Expected: `1 passed` (health check).
 
 - [ ] **Step 5: Commit**
 
@@ -202,8 +201,7 @@ describe('findAll', () => {
 describe('findById', () => {
   it('returns the employee when found', async () => {
     const created = await repo.create(VALID_DTO);
-    const found = await repo.findById(created.id);
-    expect(found?.name).toBe('Alice Johnson');
+    expect((await repo.findById(created.id))?.name).toBe('Alice Johnson');
   });
 
   it('returns null when not found', async () => {
@@ -214,8 +212,7 @@ describe('findById', () => {
 describe('findByEmail', () => {
   it('returns the employee when email matches', async () => {
     await repo.create(VALID_DTO);
-    const found = await repo.findByEmail('alice@example.com');
-    expect(found?.name).toBe('Alice Johnson');
+    expect((await repo.findByEmail('alice@example.com'))?.name).toBe('Alice Johnson');
   });
 
   it('returns null when email not found', async () => {
@@ -228,7 +225,6 @@ describe('create', () => {
     const created = await repo.create(VALID_DTO);
     expect(created.id).toBeDefined();
     expect(created.name).toBe('Alice Johnson');
-    expect(created.email).toBe('alice@example.com');
   });
 });
 
@@ -237,7 +233,6 @@ describe('update', () => {
     const created = await repo.create(VALID_DTO);
     const updated = await repo.update(created.id, { ...VALID_DTO, salary: 95000 });
     expect(updated.salary).toBe(95000);
-    expect(updated.name).toBe('Alice Johnson');
   });
 });
 
@@ -252,7 +247,6 @@ describe('deleteById', () => {
 
 - [ ] **Step 2: Run tests to confirm they fail**
 
-Run from `server/`:
 ```bash
 npm test -- --testPathPattern=employeeRepository
 ```
@@ -265,14 +259,14 @@ Create `server/src/repositories/employeeRepository.ts`:
 
 ```typescript
 import type { Knex } from 'knex';
-import type { Employee, CreateEmployeeDto, UpdateEmployeeDto } from '../types/employee';
+import type { Employee, CreateEmployeeDto } from '../types/employee';
 
 export interface IEmployeeRepository {
   findAll(): Promise<Employee[]>;
   findById(id: number): Promise<Employee | null>;
   findByEmail(email: string): Promise<Employee | null>;
   create(dto: CreateEmployeeDto): Promise<Employee>;
-  update(id: number, dto: UpdateEmployeeDto): Promise<Employee>;
+  update(id: number, dto: CreateEmployeeDto): Promise<Employee>;
   deleteById(id: number): Promise<void>;
 }
 
@@ -296,7 +290,7 @@ export class EmployeeRepository implements IEmployeeRepository {
     return this.findById(id) as Promise<Employee>;
   }
 
-  async update(id: number, dto: UpdateEmployeeDto): Promise<Employee> {
+  async update(id: number, dto: CreateEmployeeDto): Promise<Employee> {
     await this.knex('employees').where({ id }).update(dto);
     return this.findById(id) as Promise<Employee>;
   }
@@ -366,11 +360,11 @@ function makeRepo(overrides: Partial<IEmployeeRepository> = {}): IEmployeeReposi
 }
 
 describe('listEmployees', () => {
-  it('returns employees and total count', async () => {
+  it('returns all employees', async () => {
     const service = new EmployeeService(makeRepo({ findAll: jest.fn().mockResolvedValue([ALICE]) }));
     const result = await service.listEmployees();
-    expect(result.employees).toHaveLength(1);
-    expect(result.total).toBe(1);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Alice Johnson');
   });
 });
 
@@ -388,15 +382,15 @@ describe('getEmployee', () => {
 
 describe('createEmployee — validation', () => {
   it.each([
-    ['name is required',                  { name: '' }],
-    ['email is invalid',                  { email: 'not-an-email' }],
-    ['invalid gender',                    { gender: 'Unknown' as any }],
-    ['role is required',                  { role: '' }],
-    ['department is required',            { department: '' }],
-    ['country is required',               { country: '' }],
-    ['salary must be positive',           { salary: -1 }],
-    ['invalid employment type',           { employment_type: 'Part-time' as any }],
-    ['joining_date must be YYYY-MM-DD',   { joining_date: '15-03-2019' }],
+    ['name is required',                { name: '' }],
+    ['email is invalid',                { email: 'not-an-email' }],
+    ['invalid gender',                  { gender: 'Unknown' as any }],
+    ['role is required',                { role: '' }],
+    ['department is required',          { department: '' }],
+    ['country is required',             { country: '' }],
+    ['salary must be positive',         { salary: -1 }],
+    ['invalid employment type',         { employment_type: 'Part-time' as any }],
+    ['joining_date must be YYYY-MM-DD', { joining_date: '15-03-2019' }],
   ])('throws 400 when %s', async (_msg, override) => {
     const service = new EmployeeService(makeRepo());
     await expect(service.createEmployee({ ...VALID_DTO, ...override })).rejects.toMatchObject({ status: 400 });
@@ -476,16 +470,8 @@ Create `server/src/services/employeeService.ts`:
 
 ```typescript
 import type { IEmployeeRepository } from '../repositories/employeeRepository';
-import type { Employee, CreateEmployeeDto, UpdateEmployeeDto } from '../types/employee';
+import type { Employee, CreateEmployeeDto } from '../types/employee';
 import { ValidationError, NotFoundError, ConflictError } from '../middleware/errors';
-
-export interface IEmployeeService {
-  listEmployees(): Promise<{ employees: Employee[]; total: number }>;
-  getEmployee(id: number): Promise<Employee>;
-  createEmployee(dto: CreateEmployeeDto): Promise<Employee>;
-  updateEmployee(id: number, dto: UpdateEmployeeDto): Promise<Employee>;
-  deleteEmployee(id: number): Promise<void>;
-}
 
 function validate(dto: CreateEmployeeDto): string | null {
   if (!dto.name?.trim())                                return 'name is required';
@@ -500,12 +486,11 @@ function validate(dto: CreateEmployeeDto): string | null {
   return null;
 }
 
-export class EmployeeService implements IEmployeeService {
+export class EmployeeService {
   constructor(private readonly repo: IEmployeeRepository) {}
 
-  async listEmployees(): Promise<{ employees: Employee[]; total: number }> {
-    const employees = await this.repo.findAll();
-    return { employees, total: employees.length };
+  listEmployees(): Promise<Employee[]> {
+    return this.repo.findAll();
   }
 
   async getEmployee(id: number): Promise<Employee> {
@@ -522,7 +507,7 @@ export class EmployeeService implements IEmployeeService {
     return this.repo.create(dto);
   }
 
-  async updateEmployee(id: number, dto: UpdateEmployeeDto): Promise<Employee> {
+  async updateEmployee(id: number, dto: CreateEmployeeDto): Promise<Employee> {
     const error = validate(dto);
     if (error) throw new ValidationError(error);
     const employee = await this.repo.findById(id);
@@ -574,20 +559,13 @@ import express from 'express';
 import { createEmployeeRouter } from '../../src/routes/employees';
 import { errorHandler } from '../../src/middleware/errorHandler';
 import { ValidationError, NotFoundError, ConflictError } from '../../src/middleware/errors';
-import type { IEmployeeService } from '../../src/services/employeeService';
+import type { EmployeeService } from '../../src/services/employeeService';
 import type { Employee } from '../../src/types/employee';
 
 const ALICE: Employee = {
-  id: 1,
-  name: 'Alice Johnson',
-  email: 'alice@example.com',
-  gender: 'Female',
-  role: 'Software Engineer',
-  department: 'Engineering',
-  country: 'Germany',
-  salary: 87400,
-  employment_type: 'Full-time',
-  joining_date: '2019-03-15',
+  id: 1, name: 'Alice Johnson', email: 'alice@example.com', gender: 'Female',
+  role: 'Software Engineer', department: 'Engineering', country: 'Germany',
+  salary: 87400, employment_type: 'Full-time', joining_date: '2019-03-15',
 };
 
 const VALID_BODY = {
@@ -596,18 +574,18 @@ const VALID_BODY = {
   salary: 87400, employment_type: 'Full-time', joining_date: '2019-03-15',
 };
 
-function makeService(overrides: Partial<IEmployeeService> = {}): IEmployeeService {
+function makeService(overrides: Partial<EmployeeService> = {}): EmployeeService {
   return {
-    listEmployees: jest.fn().mockResolvedValue({ employees: [ALICE], total: 1 }),
+    listEmployees: jest.fn().mockResolvedValue([ALICE]),
     getEmployee: jest.fn().mockResolvedValue(ALICE),
     createEmployee: jest.fn().mockResolvedValue(ALICE),
     updateEmployee: jest.fn().mockResolvedValue({ ...ALICE, salary: 95000 }),
     deleteEmployee: jest.fn().mockResolvedValue(undefined),
     ...overrides,
-  };
+  } as unknown as EmployeeService;
 }
 
-function makeApp(service: IEmployeeService) {
+function makeApp(service: EmployeeService) {
   const app = express();
   app.use(express.json());
   app.use('/api/employees', createEmployeeRouter(service));
@@ -616,11 +594,11 @@ function makeApp(service: IEmployeeService) {
 }
 
 describe('GET /api/employees', () => {
-  it('returns 200 with employees and total', async () => {
+  it('returns 200 with employee array', async () => {
     const res = await request(makeApp(makeService())).get('/api/employees');
     expect(res.status).toBe(200);
-    expect(res.body.employees).toHaveLength(1);
-    expect(res.body.total).toBe(1);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].name).toBe('Alice Johnson');
   });
 });
 
@@ -709,50 +687,40 @@ Create `server/src/routes/employees.ts`:
 
 ```typescript
 import { Router, Request, Response, NextFunction } from 'express';
-import type { IEmployeeService } from '../services/employeeService';
+import type { EmployeeService } from '../services/employeeService';
 
-export function createEmployeeRouter(service: IEmployeeService): Router {
+export function createEmployeeRouter(service: EmployeeService): Router {
   const router = Router();
 
   router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
     try {
       res.json(await service.listEmployees());
-    } catch (err) {
-      next(err);
-    }
+    } catch (err) { next(err); }
   });
 
   router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.json(await service.getEmployee(Number(req.params.id)));
-    } catch (err) {
-      next(err);
-    }
+    } catch (err) { next(err); }
   });
 
   router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.status(201).json(await service.createEmployee(req.body));
-    } catch (err) {
-      next(err);
-    }
+    } catch (err) { next(err); }
   });
 
   router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.json(await service.updateEmployee(Number(req.params.id), req.body));
-    } catch (err) {
-      next(err);
-    }
+    } catch (err) { next(err); }
   });
 
   router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
       await service.deleteEmployee(Number(req.params.id));
       res.status(204).send();
-    } catch (err) {
-      next(err);
-    }
+    } catch (err) { next(err); }
   });
 
   return router;
@@ -767,9 +735,9 @@ npm test -- --testPathPattern=routes/employees
 
 Expected: `8 passed`.
 
-- [ ] **Step 5: Wire routes + middleware into app.ts**
+- [ ] **Step 5: Wire routes into app.ts**
 
-Replace `server/src/app.ts` with:
+Replace `server/src/app.ts`:
 
 ```typescript
 import express, { Express } from 'express';
@@ -801,13 +769,13 @@ export function createApp(): Express {
 }
 ```
 
-- [ ] **Step 6: Run full test suite to confirm all tests pass**
+- [ ] **Step 6: Run full test suite**
 
 ```bash
 npm test
 ```
 
-Expected: all tests pass (health + repository + service + routes).
+Expected: all backend tests pass.
 
 - [ ] **Step 7: Commit**
 
@@ -835,52 +803,22 @@ npm install dayjs @ant-design/icons
 npm install --save-dev vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
 ```
 
-Expected: packages installed, no errors.
-
 - [ ] **Step 2: Add test script to client/package.json**
 
-In `client/package.json`, add `"test": "vitest run"` to the scripts section:
+Add `"test": "vitest run"` to the scripts section in `client/package.json`:
 
 ```json
-{
-  "name": "salary-management-client",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest run"
-  },
-  "dependencies": {
-    "@ant-design/icons": "^5.3.0",
-    "@tanstack/react-query": "^5.17.19",
-    "antd": "^5.13.2",
-    "dayjs": "^1.11.10",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.3"
-  },
-  "devDependencies": {
-    "@testing-library/jest-dom": "^6.4.0",
-    "@testing-library/react": "^14.2.0",
-    "@testing-library/user-event": "^14.5.2",
-    "@types/react": "^18.2.48",
-    "@types/react-dom": "^18.2.18",
-    "@vitejs/plugin-react": "^4.2.1",
-    "jsdom": "^24.0.0",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.12",
-    "vitest": "^1.2.0"
-  }
+"scripts": {
+  "dev": "vite",
+  "build": "tsc && vite build",
+  "preview": "vite preview",
+  "test": "vitest run"
 }
 ```
 
-Note: exact versions will be resolved by npm — the above versions are minimums.
-
 - [ ] **Step 3: Add vitest config to vite.config.ts**
 
-Replace `client/vite.config.ts` with:
+Replace `client/vite.config.ts`:
 
 ```typescript
 import { defineConfig } from 'vite';
@@ -929,7 +867,6 @@ export interface Employee {
 }
 
 export type CreateEmployeeDto = Omit<Employee, 'id'>;
-export type UpdateEmployeeDto = Omit<Employee, 'id'>;
 ```
 
 - [ ] **Step 6: Create API functions**
@@ -937,16 +874,16 @@ export type UpdateEmployeeDto = Omit<Employee, 'id'>;
 Create `client/src/api/employees.ts`:
 
 ```typescript
-import type { Employee, CreateEmployeeDto, UpdateEmployeeDto } from '../types/employee';
+import type { Employee, CreateEmployeeDto } from '../types/employee';
 
 const BASE = '/api/employees';
 
 async function parseError(res: Response): Promise<never> {
   const data = await res.json().catch(() => ({}));
-  throw new Error(data.error ?? `request failed with status ${res.status}`);
+  throw new Error((data as { error?: string }).error ?? `request failed with status ${res.status}`);
 }
 
-export async function fetchEmployees(): Promise<{ employees: Employee[]; total: number }> {
+export async function fetchEmployees(): Promise<Employee[]> {
   const res = await fetch(BASE);
   if (!res.ok) await parseError(res);
   return res.json();
@@ -968,7 +905,7 @@ export async function createEmployee(dto: CreateEmployeeDto): Promise<Employee> 
   return res.json();
 }
 
-export async function updateEmployee(id: number, dto: UpdateEmployeeDto): Promise<Employee> {
+export async function updateEmployee(id: number, dto: CreateEmployeeDto): Promise<Employee> {
   const res = await fetch(`${BASE}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -1002,7 +939,7 @@ git commit -m "feat: add frontend test setup, employee types, and API layer"
 - Create: `client/src/hooks/useUpdateEmployee.ts`
 - Create: `client/src/hooks/useDeleteEmployee.ts`
 
-- [ ] **Step 1: Create useEmployees hook**
+- [ ] **Step 1: Create useEmployees**
 
 Create `client/src/hooks/useEmployees.ts`:
 
@@ -1015,7 +952,7 @@ export function useEmployees() {
 }
 ```
 
-- [ ] **Step 2: Create useEmployee hook**
+- [ ] **Step 2: Create useEmployee**
 
 Create `client/src/hooks/useEmployee.ts`:
 
@@ -1032,7 +969,7 @@ export function useEmployee(id: number | null) {
 }
 ```
 
-- [ ] **Step 3: Create useCreateEmployee hook**
+- [ ] **Step 3: Create useCreateEmployee**
 
 Create `client/src/hooks/useCreateEmployee.ts`:
 
@@ -1049,19 +986,19 @@ export function useCreateEmployee() {
 }
 ```
 
-- [ ] **Step 4: Create useUpdateEmployee hook**
+- [ ] **Step 4: Create useUpdateEmployee**
 
 Create `client/src/hooks/useUpdateEmployee.ts`:
 
 ```typescript
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateEmployee } from '../api/employees';
-import type { UpdateEmployeeDto } from '../types/employee';
+import type { CreateEmployeeDto } from '../types/employee';
 
 export function useUpdateEmployee() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, dto }: { id: number; dto: UpdateEmployeeDto }) => updateEmployee(id, dto),
+    mutationFn: ({ id, dto }: { id: number; dto: CreateEmployeeDto }) => updateEmployee(id, dto),
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['employee', id] });
@@ -1070,7 +1007,7 @@ export function useUpdateEmployee() {
 }
 ```
 
-- [ ] **Step 5: Create useDeleteEmployee hook**
+- [ ] **Step 5: Create useDeleteEmployee**
 
 Create `client/src/hooks/useDeleteEmployee.ts`:
 
@@ -1102,7 +1039,7 @@ git commit -m "feat: add React Query hooks for employee CRUD"
 - Create: `client/src/components/EmployeeList.tsx`
 - Create: `client/src/components/__tests__/EmployeeList.test.tsx`
 
-- [ ] **Step 1: Write failing EmployeeList tests**
+- [ ] **Step 1: Write failing tests**
 
 Create `client/src/components/__tests__/EmployeeList.test.tsx`:
 
@@ -1115,23 +1052,17 @@ vi.mock('../../hooks/useEmployees');
 import { useEmployees } from '../../hooks/useEmployees';
 
 const EMPLOYEES = [
-  {
-    id: 1, name: 'Alice Johnson', role: 'Software Engineer', country: 'Germany',
+  { id: 1, name: 'Alice Johnson', role: 'Software Engineer', country: 'Germany',
     email: 'alice@example.com', gender: 'Female' as const, department: 'Engineering',
-    salary: 87400, employment_type: 'Full-time' as const, joining_date: '2019-03-15',
-  },
-  {
-    id: 2, name: 'Bob Martinez', role: 'Sales Manager', country: 'USA',
+    salary: 87400, employment_type: 'Full-time' as const, joining_date: '2019-03-15' },
+  { id: 2, name: 'Bob Martinez', role: 'Sales Manager', country: 'USA',
     email: 'bob@example.com', gender: 'Male' as const, department: 'Sales',
-    salary: 90000, employment_type: 'Full-time' as const, joining_date: '2020-01-10',
-  },
+    salary: 90000, employment_type: 'Full-time' as const, joining_date: '2020-01-10' },
 ];
 
 beforeEach(() => {
   vi.mocked(useEmployees).mockReturnValue({
-    data: { employees: EMPLOYEES, total: 2 },
-    isLoading: false,
-    isError: false,
+    data: EMPLOYEES, isLoading: false, isError: false,
   } as any);
 });
 
@@ -1142,7 +1073,7 @@ describe('EmployeeList', () => {
     expect(screen.getByText('Bob Martinez')).toBeInTheDocument();
   });
 
-  it('shows total count in header', () => {
+  it('shows employee count in header', () => {
     render(<EmployeeList selectedId={null} onSelect={vi.fn()} onNew={vi.fn()} />);
     expect(screen.getByText(/employees \(2\)/i)).toBeInTheDocument();
   });
@@ -1206,14 +1137,16 @@ export default function EmployeeList({ selectedId, onSelect, onNew }: Props) {
   if (isLoading) return <Spin size="large" style={{ display: 'block', marginTop: 40 }} />;
   if (isError) return <Alert type="error" message="Failed to load employees" style={{ margin: 16 }} />;
 
+  const employees: Employee[] = data ?? [];
+
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '12px 16px', borderBottom: '1px solid #e8e8e8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontWeight: 700, fontSize: 14 }}>Employees ({data?.total ?? 0})</span>
+        <span style={{ fontWeight: 700, fontSize: 14 }}>Employees ({employees.length})</span>
         <Button type="primary" icon={<PlusOutlined />} size="small" onClick={onNew}>New</Button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        {data?.employees.map((emp: Employee) => (
+        {employees.map((emp) => (
           <div
             key={emp.id}
             onClick={() => onSelect(emp.id)}
@@ -1258,7 +1191,7 @@ git commit -m "feat: add EmployeeList component with tests"
 - Create: `client/src/components/EmployeeForm.tsx`
 - Create: `client/src/components/__tests__/EmployeeForm.test.tsx`
 
-- [ ] **Step 1: Write failing EmployeeForm tests**
+- [ ] **Step 1: Write failing tests**
 
 Create `client/src/components/__tests__/EmployeeForm.test.tsx`:
 
@@ -1278,15 +1211,13 @@ import { useUpdateEmployee } from '../../hooks/useUpdateEmployee';
 import { useDeleteEmployee } from '../../hooks/useDeleteEmployee';
 
 const ALICE = {
-  id: 1, name: 'Alice Johnson', email: 'alice@example.com',
-  gender: 'Female' as const, role: 'Software Engineer', department: 'Engineering',
-  country: 'Germany', salary: 87400, employment_type: 'Full-time' as const,
-  joining_date: '2019-03-15',
+  id: 1, name: 'Alice Johnson', email: 'alice@example.com', gender: 'Female' as const,
+  role: 'Software Engineer', department: 'Engineering', country: 'Germany',
+  salary: 87400, employment_type: 'Full-time' as const, joining_date: '2019-03-15',
 };
 
 const PROPS = {
-  onCreated: vi.fn(), onSaved: vi.fn(), onDeleted: vi.fn(),
-  onCancel: vi.fn(), onEdit: vi.fn(),
+  onCreated: vi.fn(), onSaved: vi.fn(), onDeleted: vi.fn(), onCancel: vi.fn(), onEdit: vi.fn(),
 };
 
 beforeEach(() => {
@@ -1297,12 +1228,12 @@ beforeEach(() => {
 });
 
 describe('EmployeeForm — view mode', () => {
-  it('shows employee name in header', () => {
+  it('shows employee name', () => {
     render(<EmployeeForm mode="view" employeeId={1} {...PROPS} />);
     expect(screen.getByText('Alice Johnson')).toBeInTheDocument();
   });
 
-  it('shows role and department badges', () => {
+  it('shows role and department as badges', () => {
     render(<EmployeeForm mode="view" employeeId={1} {...PROPS} />);
     expect(screen.getByText('Software Engineer')).toBeInTheDocument();
     expect(screen.getByText('Engineering')).toBeInTheDocument();
@@ -1314,19 +1245,19 @@ describe('EmployeeForm — view mode', () => {
     expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
   });
 
-  it('shows salary value', () => {
+  it('shows formatted salary', () => {
     render(<EmployeeForm mode="view" employeeId={1} {...PROPS} />);
     expect(screen.getByText('87,400')).toBeInTheDocument();
   });
 });
 
 describe('EmployeeForm — create mode', () => {
-  it('shows New Employee in header', () => {
+  it('shows New Employee header', () => {
     render(<EmployeeForm mode="create" employeeId={null} {...PROPS} />);
     expect(screen.getByText('New Employee')).toBeInTheDocument();
   });
 
-  it('shows Name input', () => {
+  it('shows name input', () => {
     render(<EmployeeForm mode="create" employeeId={null} {...PROPS} />);
     expect(screen.getByPlaceholderText('Full name')).toBeInTheDocument();
   });
@@ -1339,7 +1270,7 @@ describe('EmployeeForm — create mode', () => {
 });
 
 describe('EmployeeForm — edit mode', () => {
-  it('shows Editing label in header', () => {
+  it('shows Editing label', () => {
     render(<EmployeeForm mode="edit" employeeId={1} {...PROPS} />);
     expect(screen.getByText(/editing/i)).toBeInTheDocument();
   });
@@ -1367,7 +1298,7 @@ Create `client/src/components/EmployeeForm.tsx`:
 ```tsx
 import { useEffect } from 'react';
 import { Form, Input, Select, InputNumber, DatePicker, Button, Tag, Modal, message, Spin, Alert } from 'antd';
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { useEmployee } from '../hooks/useEmployee';
 import { useCreateEmployee } from '../hooks/useCreateEmployee';
 import { useUpdateEmployee } from '../hooks/useUpdateEmployee';
@@ -1389,15 +1320,23 @@ interface Props {
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'].map(g => ({ label: g, value: g }));
 const EMPLOYMENT_OPTIONS = ['Full-time', 'Contractor'].map(t => ({ label: t, value: t }));
 
-const sectionHeaderStyle: React.CSSProperties = {
-  fontSize: 12, fontWeight: 700, color: '#1677ff',
-  textTransform: 'uppercase', letterSpacing: '0.8px',
-  borderBottom: '2px solid #e6f4ff', paddingBottom: 6, marginBottom: 12,
+const sectionHeader: React.CSSProperties = {
+  fontSize: 12, fontWeight: 700, color: '#1677ff', textTransform: 'uppercase',
+  letterSpacing: '0.8px', borderBottom: '2px solid #e6f4ff', paddingBottom: 6, marginBottom: 12,
 };
 
-const fieldGridStyle: React.CSSProperties = {
+const fieldGrid: React.CSSProperties = {
   display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20,
 };
+
+function FieldValue({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+      <div style={{ fontSize: 14, marginTop: 2 }}>{value}</div>
+    </div>
+  );
+}
 
 export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onDeleted, onCancel, onEdit }: Props) {
   const [form] = Form.useForm();
@@ -1421,8 +1360,8 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
 
   async function handleSubmit(values: Record<string, unknown>) {
     const dto: CreateEmployeeDto = {
-      ...(values as Omit<CreateEmployeeDto, 'joining_date'>),
-      joining_date: (values.joining_date as dayjs.Dayjs).format('YYYY-MM-DD'),
+      ...(values as CreateEmployeeDto),
+      joining_date: (values.joining_date as Dayjs).format('YYYY-MM-DD'),
     };
     try {
       if (mode === 'create') {
@@ -1451,7 +1390,7 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
     });
   }
 
-  const headerActions = mode === 'view' ? (
+  const actions = mode === 'view' ? (
     <div style={{ display: 'flex', gap: 8 }}>
       <Button onClick={() => onEdit(employeeId!)}>Edit</Button>
       <Button danger onClick={handleDelete}>Delete</Button>
@@ -1464,57 +1403,54 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
   );
 
   if (mode === 'view' && employee) {
-    const empTypeColor = employee.employment_type === 'Full-time' ? 'green' : 'orange';
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '12px 20px', borderBottom: '1px solid #e8e8e8', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 700 }}>{employee.name}</div>
             <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{employee.email}</div>
-            <div style={{ marginTop: 6, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            <div style={{ marginTop: 6, display: 'flex', gap: 4 }}>
               <Tag color="blue">{employee.role}</Tag>
               <Tag color="purple">{employee.department}</Tag>
-              <Tag color={empTypeColor}>{employee.employment_type}</Tag>
+              <Tag color={employee.employment_type === 'Full-time' ? 'green' : 'orange'}>{employee.employment_type}</Tag>
             </div>
           </div>
-          {headerActions}
+          {actions}
         </div>
         <div style={{ flex: 1, padding: 20, overflowY: 'auto' }}>
-          <div style={sectionHeaderStyle}>Personal</div>
-          <div style={fieldGridStyle}>
-            <Field label="Gender" value={employee.gender} />
-            <Field label="Joining Date" value={employee.joining_date} />
+          <div style={sectionHeader}>Personal</div>
+          <div style={fieldGrid}>
+            <FieldValue label="Gender" value={employee.gender} />
+            <FieldValue label="Joining Date" value={employee.joining_date} />
           </div>
-          <div style={sectionHeaderStyle}>Role & Employment</div>
-          <div style={fieldGridStyle}>
-            <Field label="Role" value={employee.role} />
-            <Field label="Department" value={employee.department} />
-            <Field label="Country" value={employee.country} />
-            <Field label="Employment Type" value={employee.employment_type} />
+          <div style={sectionHeader}>Role & Employment</div>
+          <div style={fieldGrid}>
+            <FieldValue label="Role" value={employee.role} />
+            <FieldValue label="Department" value={employee.department} />
+            <FieldValue label="Country" value={employee.country} />
+            <FieldValue label="Employment Type" value={employee.employment_type} />
           </div>
-          <div style={sectionHeaderStyle}>Compensation</div>
-          <div>
-            <div style={{ fontSize: 11, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Salary</div>
-            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{employee.salary.toLocaleString()}</div>
-            <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>Local currency</div>
-          </div>
+          <div style={sectionHeader}>Compensation</div>
+          <div style={{ fontSize: 11, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Salary</div>
+          <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{employee.salary.toLocaleString()}</div>
+          <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>Local currency</div>
         </div>
       </div>
     );
   }
 
-  const headerTitle = mode === 'create' ? 'New Employee' : `Editing: ${employee?.name ?? ''}`;
-
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '12px 20px', borderBottom: '1px solid #e8e8e8', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 15, fontWeight: 700 }}>{headerTitle}</div>
-        {headerActions}
+        <div style={{ fontSize: 15, fontWeight: 700 }}>
+          {mode === 'create' ? 'New Employee' : `Editing: ${employee?.name ?? ''}`}
+        </div>
+        {actions}
       </div>
       <div style={{ flex: 1, padding: 20, overflowY: 'auto' }}>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <div style={sectionHeaderStyle}>Personal</div>
-          <div style={fieldGridStyle}>
+          <div style={sectionHeader}>Personal</div>
+          <div style={fieldGrid}>
             <Form.Item name="name" label="Name" rules={[{ required: true, message: 'name is required' }]} style={{ marginBottom: 0 }}>
               <Input placeholder="Full name" />
             </Form.Item>
@@ -1529,8 +1465,8 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
             </Form.Item>
           </div>
 
-          <div style={sectionHeaderStyle}>Role & Employment</div>
-          <div style={fieldGridStyle}>
+          <div style={sectionHeader}>Role & Employment</div>
+          <div style={fieldGrid}>
             <Form.Item name="role" label="Role" rules={[{ required: true, message: 'role is required' }]} style={{ marginBottom: 0 }}>
               <Input placeholder="Job title" />
             </Form.Item>
@@ -1545,7 +1481,7 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
             </Form.Item>
           </div>
 
-          <div style={sectionHeaderStyle}>Compensation</div>
+          <div style={sectionHeader}>Compensation</div>
           <div style={{ maxWidth: 280 }}>
             <Form.Item name="salary" label="Salary" rules={[{ required: true, message: 'salary is required' }]} style={{ marginBottom: 0 }}>
               <InputNumber min={1} style={{ width: '100%' }} placeholder="0" />
@@ -1557,15 +1493,6 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
     </div>
   );
 }
-
-function Field({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div>
-      <div style={{ fontSize: 11, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
-      <div style={{ fontSize: 14, marginTop: 2 }}>{value}</div>
-    </div>
-  );
-}
 ```
 
 - [ ] **Step 4: Run tests to confirm they pass**
@@ -1574,7 +1501,7 @@ function Field({ label, value }: { label: string; value: string | number }) {
 npm test
 ```
 
-Expected: all tests pass (EmployeeList + EmployeeForm).
+Expected: all frontend tests pass.
 
 - [ ] **Step 5: Commit**
 
@@ -1674,7 +1601,7 @@ export default function EmployeesPage() {
 
 - [ ] **Step 2: Update App.tsx**
 
-Replace `client/src/App.tsx` with:
+Replace `client/src/App.tsx`:
 
 ```tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -1699,7 +1626,7 @@ export default function App() {
 
 In one terminal, from `server/`:
 ```bash
-npm run migrate && npm run seed && npm run dev
+npm run dev
 ```
 
 In another terminal, from `client/`:
@@ -1709,37 +1636,35 @@ npm run dev
 
 Expected: server on port 3000, client on port 5173.
 
-- [ ] **Step 4: Visual verification with Playwright**
+- [ ] **Step 4: Verify with Playwright**
 
 Use the Playwright Claude plugin to open `http://localhost:5173` and verify:
 
-1. Employee list loads with 10,000 employees (left pane shows names + roles)
-2. Click an employee → right pane shows their detail in view mode (name, role badge, salary, etc.)
-3. Click Edit → form switches to edit mode with fields pre-filled
-4. Change salary → click Save → view mode shows updated salary, list refreshes
-5. Click New → blank create form appears in right pane
-6. Fill all fields → click Save → new employee appears selected in the list
-7. Select an employee → click Delete → confirmation modal appears → confirm → panel resets to empty, employee gone from list
-8. Cancel on edit → returns to view mode for that employee
-9. Cancel on create → returns to previous panel state
+1. Employee list loads in the left pane with employee names and roles
+2. Clicking a row opens that employee's detail in the right pane (view mode)
+3. Edit button → form switches to edit mode with fields pre-filled; change a value → Save → returns to view mode with updated value
+4. New button → blank create form appears; fill all fields → Save → new employee appears selected in the list
+5. Delete button on a viewed employee → confirmation modal → confirm → panel resets to empty, employee removed from list
+6. Cancel on edit → returns to view mode for the same employee
+7. Cancel on create → returns to previous panel state
 
-- [ ] **Step 5: Run full test suites**
+- [ ] **Step 5: Run all tests**
 
 From `server/`:
 ```bash
 npm test
 ```
-Expected: all backend tests pass.
 
 From `client/`:
 ```bash
 npm test
 ```
-Expected: all frontend tests pass.
+
+Expected: all tests pass on both sides.
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add client/src/pages/EmployeesPage.tsx client/src/App.tsx
-git commit -m "feat: add EmployeesPage with master-detail layout and complete employee CRUD"
+git commit -m "feat: add EmployeesPage with master-detail layout completing Feature 3 CRUD"
 ```
