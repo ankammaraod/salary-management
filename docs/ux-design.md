@@ -211,6 +211,10 @@ Use AntD `Tag` component for inline status chips:
 - After create/edit: close modal — `useEmployees` cache is invalidated, table refreshes automatically
 - After delete: close modal (or confirm dialog), show AntD `message.success('Employee deleted')` (auto-dismisses)
 
+### 5.7 Delete Error Feedback
+
+If the delete API call fails (network error, 500, etc.), the confirm dialog closes and AntD `message.error(errorMessage)` is shown. The error message comes from the server response if available, otherwise falls back to `'Failed to delete employee'`. The employee list is not refreshed — the row remains visible.
+
 ---
 
 ## 6. Routing

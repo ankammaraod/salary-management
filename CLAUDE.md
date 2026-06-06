@@ -43,6 +43,14 @@ Every code change follows the red → green → refactor loop:
 
 **Follow micro commits for code changes and dont make massive commits**
 
+## Atomic commits — docs and fixes travel together (required)
+
+**Every commit must be self-contained and leave the repo correct.**
+
+- If a code change affects a design decision documented in `docs/`, update the relevant doc in the same commit. Never commit code that makes the docs wrong.
+- If you discover a bug or error while implementing a task, fix it in its own commit before continuing. Do not defer fixes to a follow-up PR.
+- A commit that adds a feature and silently breaks the docs, or that leaves a known bug for later, is not acceptable.
+
 ## YAGNI — You Aren't Gonna Need It (required)
 
 **Never build what isn't asked for. No exceptions.**

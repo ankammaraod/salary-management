@@ -113,6 +113,15 @@ server/
 └── package.json
 ```
 
+### Error handling
+
+| Concern | Behaviour |
+|---|---|
+| Known errors (400/404/409) | Routes call `next(err)`; `errorHandler` returns `{ error: message }` with the correct status |
+| Unknown errors (500) | `errorHandler` returns `{ error: 'internal server error' }` and **logs the full `Error` object** (stack included) via `console.error(err)` |
+| Non-numeric `:id` params | Routes return 400 `{ error: 'id must be a number' }` before calling the service |
+| Repository post-write safety | `create` and `update` throw `Error` if `findById` returns null after the write, rather than silently returning a typed null |
+
 ### Three-layer architecture with dependency injection
 
 Each layer has one responsibility. Dependencies flow inward — routes depend on services, services depend on repositories. Nothing depends outward.
