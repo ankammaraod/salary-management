@@ -118,7 +118,7 @@ React Query caches each page separately. Navigating back to a page already fetch
 - Table `dataSource={data?.employees ?? []}`, `loading={isLoading}`
 - AntD Table `pagination={{ current: page, pageSize: 20, total: data?.total ?? 0, onChange: setPage, showSizeChanger: false }}`
 
-**Column order (unchanged):** ID, Name, Role, Department, Country, Salary, Employment Type, Actions. Email, Joining Date, and Gender remain in the View modal only.
+**Column order:** ID, Name, Country, Salary, Employment Type, Actions. Role, Department, Email, Joining Date, and Gender are all visible in the View modal only.
 
 ---
 

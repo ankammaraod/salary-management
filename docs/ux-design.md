@@ -103,14 +103,12 @@ Use Ant Design's default font stack. Do not introduce custom fonts.
 |---|---|
 | ID | Plain number |
 | Name | Plain text |
-| Role | Plain text |
-| Department | Plain text |
 | Country | Plain text |
 | Salary | Currency symbol (from country) + `toLocaleString()`, right-aligned |
 | Employment Type | AntD `Tag` — green for Full-time, orange for Contractor |
 | Actions | Single `⋮` icon button (AntD `Dropdown`) |
 
-Joining Date, Email, and Gender are not shown in the table — they are visible in the View modal.
+Role, Department, Email, Joining Date, and Gender are not shown in the table — they are visible in the View modal.
 
 **Currency symbol map** (in `client/src/utils/currency.ts`):
 
