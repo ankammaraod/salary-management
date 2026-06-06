@@ -43,6 +43,19 @@ Every code change follows the red → green → refactor loop:
 
 **Follow micro commits for code changes and dont make massive commits**
 
+## YAGNI — You Aren't Gonna Need It (required)
+
+**Never build what isn't asked for. No exceptions.**
+
+- Implement only what the current task explicitly requires. If the PRD doesn't mention it, don't build it.
+- No speculative fields, columns, props, or config options "for future use."
+- No generic abstractions for a single use case — wait until there are at least two real callers.
+- No extra error handling for scenarios that can't happen in this codebase (e.g., defensive null checks on values the DB guarantees non-null).
+- No helper utilities, hooks, or components that aren't immediately used by the task at hand.
+- No "flexible" APIs or plugin points that aren't needed today.
+
+When in doubt: delete the idea. If it's truly needed, a future task will add it with a test.
+
 ## UI verification — Playwright plugin (required)
 
 **All UI changes must be verified using the Playwright Claude plugin. Do NOT write Playwright test files.**
