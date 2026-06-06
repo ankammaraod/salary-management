@@ -6,12 +6,14 @@ const config: { [key: string]: Knex.Config } = {
     connection: { filename: './salary_management.db' },
     useNullAsDefault: true,
     migrations: { directory: './src/db/migrations' },
+    seeds: { directory: './src/db/seeds' },
   },
   test: {
     client: 'sqlite3',
     connection: { filename: ':memory:' },
     useNullAsDefault: true,
     migrations: { directory: './src/db/migrations' },
+    seeds: { directory: './src/db/seeds' },
   },
 };
 
