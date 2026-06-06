@@ -49,18 +49,30 @@ Salary is stored in the employee's local currency. Currency is derived from coun
 
 ## Scope & Features
 
-### Feature 1 — Employee List (home screen)
+### Feature 1 — Project Scaffold + DB Schema
 
-Paginated table of all 10,000 employees showing: ID, name, email, role, department, country, salary, employment type, joining date. Single global search box — matches against ID, name, email, role, department, and country. Salary is explicitly excluded from search. Each row links to the employee detail view.
+Bootstrap the full monorepo: `server/` (Express + TypeScript) and `client/` (React + Vite + TypeScript) each with their own `package.json`. Set up Knex with the initial migration creating the `employees` table. Docker and docker-compose configured for local development. A health check endpoint (`GET /api/health`) confirms the server is running.
 
-### Feature 2 — Employee Management (CRUD)
+### Feature 2 — Seed Script
+
+Script that populates 10,000 realistic employees spread across multiple countries, departments, and roles with plausible salary ranges in local currencies. Built early so all subsequent features have real data to develop and verify against.
+
+### Feature 3 — Employee Management (CRUD)
 
 - **Create** — add a new employee with all fields
 - **View** — read-only detail page per employee
 - **Edit** — update any field on an existing employee
 - **Delete** — hard delete with a confirmation dialog before deletion
 
-### Feature 3 — Salary Insights
+### Feature 4 — Employee List (home screen)
+
+Paginated table of all 10,000 employees showing: ID, name, email, role, department, country, salary, employment type, joining date. Each row links to the employee detail view.
+
+### Feature 5 — Global Search
+
+Single global search box on the employee list — matches against ID, name, email, role, department, and country. Salary is explicitly excluded from search.
+
+### Feature 6 — Salary Insights
 
 A dedicated page with a country selector (defaults to "Select a country"). Once a country is selected, the following are shown:
 
@@ -76,17 +88,13 @@ A dedicated page with a country selector (defaults to "Select a country"). Once 
 **Department breakdown**
 - Table of each department present in the country with headcount and average salary
 
-### Feature 4 — Bulk CSV Upload
+### Feature 7 — Bulk CSV Upload
 
 HR Manager uploads a CSV file matching a downloadable template. The system:
 1. Validates each row (required fields, valid country, valid employment type)
 2. Shows a pre-import summary: rows to be imported, rows with errors, error details
 3. On confirm, inserts valid rows; skips errored rows
 4. Provides a downloadable error report for failed rows
-
-### Feature 5 — Seed Script
-
-Script that populates 10,000 realistic employees spread across multiple countries, departments, and roles with plausible salary ranges in local currencies.
 
 ---
 
