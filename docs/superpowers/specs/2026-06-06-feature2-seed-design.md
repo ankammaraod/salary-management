@@ -62,13 +62,13 @@ Salary is in the country's local currency, rounded to the nearest 100. The count
 - **Role:** random pick from the 20 roles below
 - **Joining date:** random date between 2016-01-01 and 2026-06-06
 
-### Departments (8)
+### Departments (4)
 
-Engineering, Product, Sales, Marketing, Finance, HR, Operations, Legal
+Engineering, Sales, Marketing, Finance
 
-### Roles (20)
+### Roles (8)
 
-Software Engineer, Senior Engineer, Engineering Manager, Product Manager, Senior Product Manager, Sales Representative, Account Executive, Sales Manager, Marketing Specialist, Marketing Manager, Financial Analyst, Finance Manager, HR Specialist, HR Manager, Operations Analyst, Operations Manager, Legal Counsel, Legal Manager, Director, VP
+Software Engineer, Engineering Manager, Sales Representative, Sales Manager, Marketing Specialist, Marketing Manager, Financial Analyst, Finance Manager
 
 ### Data generation
 
