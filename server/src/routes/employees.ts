@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import type { EmployeeService } from '../services/employeeService';
+import { ValidationError } from '../middleware/errors';
 
 export function createEmployeeRouter(service: EmployeeService): Router {
   const router = Router();
@@ -11,8 +12,10 @@ export function createEmployeeRouter(service: EmployeeService): Router {
   });
 
   router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return next(new ValidationError('id must be a number'));
     try {
-      res.json(await service.getEmployee(Number(req.params.id)));
+      res.json(await service.getEmployee(id));
     } catch (err) { next(err); }
   });
 
@@ -23,14 +26,18 @@ export function createEmployeeRouter(service: EmployeeService): Router {
   });
 
   router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return next(new ValidationError('id must be a number'));
     try {
-      res.json(await service.updateEmployee(Number(req.params.id), req.body));
+      res.json(await service.updateEmployee(id, req.body));
     } catch (err) { next(err); }
   });
 
   router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return next(new ValidationError('id must be a number'));
     try {
-      await service.deleteEmployee(Number(req.params.id));
+      await service.deleteEmployee(id);
       res.status(204).send();
     } catch (err) { next(err); }
   });

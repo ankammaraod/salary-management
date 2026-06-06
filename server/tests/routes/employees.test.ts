@@ -103,6 +103,26 @@ describe('PUT /api/employees/:id', () => {
   });
 });
 
+describe('non-numeric :id', () => {
+  it('GET returns 400 for non-numeric id', async () => {
+    const res = await request(makeApp(makeService())).get('/api/employees/abc');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('id must be a number');
+  });
+
+  it('PUT returns 400 for non-numeric id', async () => {
+    const res = await request(makeApp(makeService())).put('/api/employees/abc').send(VALID_BODY);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('id must be a number');
+  });
+
+  it('DELETE returns 400 for non-numeric id', async () => {
+    const res = await request(makeApp(makeService())).delete('/api/employees/abc');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('id must be a number');
+  });
+});
+
 describe('DELETE /api/employees/:id', () => {
   it('returns 204 on success', async () => {
     const res = await request(makeApp(makeService())).delete('/api/employees/1');
