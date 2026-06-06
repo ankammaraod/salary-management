@@ -51,7 +51,7 @@ Salary is stored in the employee's local currency. Currency is derived from coun
 
 ### Feature 1 — Project Scaffold + DB Schema
 
-Bootstrap the full monorepo: `server/` (Express + TypeScript) and `client/` (React + Vite + TypeScript) each with their own `package.json`. Set up Knex with the initial migration creating the `employees` table. Docker and docker-compose configured for local development. A health check endpoint (`GET /api/health`) confirms the server is running.
+Bootstrap the full monorepo: `server/` (Express + TypeScript) and `client/` (React + Vite + TypeScript) each with their own `package.json`. Set up Knex with the initial migration creating the `employees` table. A `Dockerfile` for single-container production builds (Express serves built React static files). A health check endpoint (`GET /api/health`) confirms the server is running. Local development uses `npm run dev` in each directory independently.
 
 ### Feature 2 — Seed Script
 

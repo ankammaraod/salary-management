@@ -66,7 +66,6 @@ salary-management/
 ├── server/                  # Node.js backend
 ├── docs/                    # PRD, architecture doc
 ├── Dockerfile               # Single-container production build
-├── docker-compose.yml       # Local development with hot reload
 ├── .dockerignore
 ├── requirement.md
 ├── CLAUDE.md
@@ -75,7 +74,7 @@ salary-management/
 
 `client/` and `server/` are independent — each has its own `package.json`, `node_modules`, and test suite. They share nothing except the HTTP contract.
 
-**Docker (production):** The Dockerfile builds the React app, copies the output into `server/public/`, and Express serves it as static files. One container, one port.
+**Docker (production):** The Dockerfile builds the React app, copies the output into `server/public/`, and Express serves it as static files. One container, one port. Local development uses `npm run dev` in each directory independently — no docker-compose.
 
 ---
 
