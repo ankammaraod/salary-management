@@ -60,6 +60,14 @@ describe('EmployeesPage', () => {
     expect(screen.getByText('$90,000')).toBeInTheDocument(); // USA
   });
 
+  it('renders employee IDs in the table', () => {
+    render(<EmployeesPage />);
+    const cells = document.querySelectorAll('.ant-table-cell');
+    const cellTexts = Array.from(cells).map(c => c.textContent);
+    expect(cellTexts).toContain('1');
+    expect(cellTexts).toContain('2');
+  });
+
   it('shows error alert when fetch fails', () => {
     vi.mocked(useEmployees).mockReturnValue({ data: undefined, isLoading: false, isError: true } as any);
     render(<EmployeesPage />);

@@ -39,6 +39,7 @@ export default function EmployeesPage() {
   }
 
   const columns = [
+    { title: 'ID', dataIndex: 'id', key: 'id' },
     { title: 'Name', dataIndex: 'name', key: 'name' },
     { title: 'Role', dataIndex: 'role', key: 'role' },
     { title: 'Department', dataIndex: 'department', key: 'department' },
