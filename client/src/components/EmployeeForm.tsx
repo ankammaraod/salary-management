@@ -40,6 +40,27 @@ function FieldValue({ label, value }: { label: string; value: string | number })
   );
 }
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(' ').filter(Boolean);
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+  return (
+    <div
+      style={{
+        width: size, height: size, borderRadius: '50%',
+        background: 'linear-gradient(135deg, #1677ff, #722ed1)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontWeight: 700, fontSize: Math.round(size * 0.35), flexShrink: 0,
+      }}
+    >
+      {getInitials(name)}
+    </div>
+  );
+}
+
 export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onDeleted, onCancel, onEdit }: Props) {
   const [form] = Form.useForm();
 
@@ -92,34 +113,28 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
     });
   }
 
-  const actions = mode === 'view' ? (
-    <div style={{ display: 'flex', gap: 8 }}>
-      <Button onClick={() => onEdit(employeeId!)}>Edit</Button>
-      <Button danger onClick={handleDelete}>Delete</Button>
-    </div>
-  ) : (
-    <div style={{ display: 'flex', gap: 8 }}>
-      <Button onClick={onCancel}>Cancel</Button>
-      <Button type="primary" loading={isSubmitting} onClick={() => form.submit()}>Save</Button>
-    </div>
-  );
-
   if (mode === 'view' && employee) {
     return (
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '12px 20px', borderBottom: '1px solid #e8e8e8', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>{employee.name}</div>
-            <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{employee.email}</div>
-            <div style={{ marginTop: 6, display: 'flex', gap: 4 }}>
-              <Tag color="blue">{employee.role}</Tag>
-              <Tag color="purple">{employee.department}</Tag>
-              <Tag color={employee.employment_type === 'Full-time' ? 'green' : 'orange'}>{employee.employment_type}</Tag>
+      <div>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e8e8e8', background: '#fafafa' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <Avatar name={employee.name} size={40} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{employee.name}</div>
+              <div style={{ fontSize: 14, color: '#888', marginTop: 2 }}>{employee.email}</div>
+              <div style={{ marginTop: 6, display: 'flex', gap: 4 }}>
+                <Tag color="blue">{employee.role}</Tag>
+                <Tag color="purple">{employee.department}</Tag>
+                <Tag color={employee.employment_type === 'Full-time' ? 'green' : 'orange'}>{employee.employment_type}</Tag>
+              </div>
             </div>
           </div>
-          {actions}
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
+            <Button onClick={() => onEdit(employeeId!)}>Edit</Button>
+            <Button danger onClick={handleDelete}>Delete</Button>
+          </div>
         </div>
-        <div style={{ flex: 1, padding: 20, overflowY: 'auto' }}>
+        <div style={{ padding: 20 }}>
           <div style={sectionHeader}>Personal</div>
           <div style={fieldGrid}>
             <FieldValue label="Gender" value={employee.gender} />
@@ -140,14 +155,25 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '12px 20px', borderBottom: '1px solid #e8e8e8', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 15, fontWeight: 700 }}>
-          {mode === 'create' ? 'New Employee' : `Editing: ${employee?.name ?? ''}`}
+    <div>
+      <div
+        style={{
+          padding: '12px 20px', borderBottom: '1px solid #e8e8e8', background: '#fafafa',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {mode === 'edit' && employee && <Avatar name={employee.name} size={32} />}
+          <div style={{ fontSize: 15, fontWeight: 700 }}>
+            {mode === 'create' ? 'New Employee' : `Editing: ${employee?.name ?? ''}`}
+          </div>
         </div>
-        {actions}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button onClick={onCancel}>Cancel</Button>
+          <Button type="primary" loading={isSubmitting} onClick={() => form.submit()}>Save</Button>
+        </div>
       </div>
-      <div style={{ flex: 1, padding: 20, overflowY: 'auto' }}>
+      <div style={{ padding: 20 }}>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <div style={sectionHeader}>Personal</div>
           <div style={fieldGrid}>

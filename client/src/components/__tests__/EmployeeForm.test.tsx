@@ -30,6 +30,11 @@ beforeEach(() => {
 });
 
 describe('EmployeeForm — view mode', () => {
+  it('shows avatar initials in view mode', () => {
+    render(<EmployeeForm mode="view" employeeId={1} {...PROPS} />);
+    expect(screen.getByText('AJ')).toBeInTheDocument();
+  });
+
   it('shows employee name', () => {
     render(<EmployeeForm mode="view" employeeId={1} {...PROPS} />);
     expect(screen.getByText('Alice Johnson')).toBeInTheDocument();
@@ -72,6 +77,11 @@ describe('EmployeeForm — create mode', () => {
 });
 
 describe('EmployeeForm — edit mode', () => {
+  it('shows avatar initials in edit mode', () => {
+    render(<EmployeeForm mode="edit" employeeId={1} {...PROPS} />);
+    expect(screen.getByText('AJ')).toBeInTheDocument();
+  });
+
   it('shows Editing label', () => {
     render(<EmployeeForm mode="edit" employeeId={1} {...PROPS} />);
     expect(screen.getByText(/editing/i)).toBeInTheDocument();
