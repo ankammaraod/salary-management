@@ -106,9 +106,13 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
       okText: 'Delete',
       okType: 'danger',
       onOk: async () => {
-        await deleteMutation.mutateAsync(employeeId!);
-        message.success('Employee deleted');
-        onDeleted();
+        try {
+          await deleteMutation.mutateAsync(employeeId!);
+          message.success('Employee deleted');
+          onDeleted();
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : 'Failed to delete employee');
+        }
       },
     });
   }

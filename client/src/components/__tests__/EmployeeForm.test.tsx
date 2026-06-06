@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { Modal, message } from 'antd';
 import EmployeeForm from '../EmployeeForm';
 
 vi.mock('../../hooks/useEmployee');
@@ -27,6 +28,31 @@ beforeEach(() => {
   vi.mocked(useCreateEmployee).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as any);
   vi.mocked(useUpdateEmployee).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as any);
   vi.mocked(useDeleteEmployee).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as any);
+});
+
+describe('EmployeeForm — delete error handling', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('shows error message when delete fails', async () => {
+    const mutateAsync = vi.fn().mockRejectedValue(new Error('network error'));
+    vi.mocked(useDeleteEmployee).mockReturnValue({ mutateAsync, isPending: false } as any);
+
+    const confirmSpy = vi.spyOn(Modal, 'confirm').mockImplementation((config: any) => {
+      config.onOk?.();
+      return {} as any;
+    });
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => Promise.resolve() as any);
+
+    render(<EmployeeForm mode="view" employeeId={1} {...PROPS} />);
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+
+    await waitFor(() => {
+      expect(errorSpy).toHaveBeenCalledWith('network error');
+    });
+
+    confirmSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
 });
 
 describe('EmployeeForm — view mode', () => {

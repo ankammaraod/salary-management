@@ -32,8 +32,12 @@ export default function EmployeesPage() {
       okText: 'Delete',
       okType: 'danger',
       onOk: async () => {
-        await deleteMutation.mutateAsync(employee.id);
-        message.success('Employee deleted');
+        try {
+          await deleteMutation.mutateAsync(employee.id);
+          message.success('Employee deleted');
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : 'Failed to delete employee');
+        }
       },
     });
   }

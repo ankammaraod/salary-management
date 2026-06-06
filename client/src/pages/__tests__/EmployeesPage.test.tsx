@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { Modal, message } from 'antd';
 import EmployeesPage from '../EmployeesPage';
 
 vi.mock('../../hooks/useEmployees');
@@ -66,6 +67,30 @@ describe('EmployeesPage', () => {
     const cellTexts = Array.from(cells).map(c => c.textContent);
     expect(cellTexts).toContain('1');
     expect(cellTexts).toContain('2');
+  });
+
+  it('shows error message when delete fails', async () => {
+    const mutateAsync = vi.fn().mockRejectedValue(new Error('server error'));
+    vi.mocked(useDeleteEmployee).mockReturnValue({ mutateAsync, isPending: false } as any);
+
+    const confirmSpy = vi.spyOn(Modal, 'confirm').mockImplementation((config: any) => {
+      config.onOk?.();
+      return {} as any;
+    });
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => Promise.resolve() as any);
+
+    render(<EmployeesPage />);
+
+    fireEvent.click(screen.getAllByRole('button', { name: /actions/i })[0]);
+    const deleteItem = await screen.findAllByText('Delete');
+    fireEvent.click(deleteItem[0]);
+
+    await waitFor(() => {
+      expect(errorSpy).toHaveBeenCalledWith('server error');
+    });
+
+    confirmSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   it('shows error alert when fetch fails', () => {
