@@ -8,6 +8,6 @@ export function errorHandler(
 ): void {
   const status = err.status ?? 500;
   const message = status === 500 ? 'internal server error' : err.message;
-  if (status === 500) console.error(err.message);
+  if (status === 500) console.error(err);
   res.status(status).json({ error: message });
 }
