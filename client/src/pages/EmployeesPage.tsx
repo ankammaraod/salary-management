@@ -6,6 +6,7 @@ import { useEmployees } from '../hooks/useEmployees';
 import { useDeleteEmployee } from '../hooks/useDeleteEmployee';
 import EmployeeForm from '../components/EmployeeForm';
 import type { Employee } from '../types/employee';
+import { getCurrencySymbol } from '../utils/currency';
 
 type ModalState =
   | { open: false }
@@ -47,7 +48,8 @@ export default function EmployeesPage() {
       dataIndex: 'salary',
       key: 'salary',
       align: 'right' as const,
-      render: (salary: number) => salary.toLocaleString(),
+      render: (salary: number, record: Employee) =>
+        `${getCurrencySymbol(record.country)}${salary.toLocaleString()}`,
     },
     {
       title: 'Employment Type',

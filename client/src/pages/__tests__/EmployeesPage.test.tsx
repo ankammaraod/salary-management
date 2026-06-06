@@ -54,6 +54,12 @@ describe('EmployeesPage', () => {
     expect(container.querySelector('.ant-spin')).toBeInTheDocument();
   });
 
+  it('renders salary with currency symbol based on country', () => {
+    render(<EmployeesPage />);
+    expect(screen.getByText('€87,400')).toBeInTheDocument(); // Germany
+    expect(screen.getByText('$90,000')).toBeInTheDocument(); // USA
+  });
+
   it('shows error alert when fetch fails', () => {
     vi.mocked(useEmployees).mockReturnValue({ data: undefined, isLoading: false, isError: true } as any);
     render(<EmployeesPage />);
