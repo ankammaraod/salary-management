@@ -187,14 +187,13 @@ Use AntD `Tag` component for inline status chips:
 
 ## 6. Routing
 
-| Path | Component | Mode |
+| Path | Component | Notes |
 |---|---|---|
-| `/employees` | `EmployeeList` | List / stub |
-| `/employees/new` | `EmployeeFormPage` | create |
-| `/employees/:id` | `EmployeeFormPage` | view |
-| `/employees/:id/edit` | `EmployeeFormPage` | edit |
+| `/employees` | `EmployeesPage` | All employee operations happen here |
 
 The root `/` redirects to `/employees`.
+
+All CRUD operations (create, view, edit, delete) are handled via panel state inside `EmployeesPage` — no sub-routes. The left pane shows the employee list; the right pane switches between `empty`, `view`, `edit`, and `create` modes based on user interaction.
 
 ---
 
