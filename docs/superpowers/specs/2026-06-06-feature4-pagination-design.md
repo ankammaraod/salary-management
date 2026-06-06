@@ -7,7 +7,7 @@
 
 ## Goal
 
-Replace the current all-at-once employee fetch with server-side pagination. The API returns one page of 20 employees at a time, plus a total count. The frontend tracks the current page in state and fetches a new page whenever it changes.
+Replace the current all-at-once employee fetch with server-side pagination. The API returns one page of employees at a time plus a total count. The frontend tracks current page and page size in state; page size defaults to 20 and can be changed to 50 or 100 via a dropdown on the table.
 
 ## Scope
 
@@ -101,22 +101,24 @@ export async function fetchEmployees(page: number, pageSize = 20): Promise<{ emp
 ### `hooks/useEmployees.ts`
 
 ```typescript
-export function useEmployees(page: number) {
+export function useEmployees(page: number, pageSize: number) {
   return useQuery({
-    queryKey: ['employees', page],
-    queryFn: () => fetchEmployees(page),
+    queryKey: ['employees', page, pageSize],
+    queryFn: () => fetchEmployees(page, pageSize),
   });
 }
 ```
 
-React Query caches each page separately. Navigating back to a page already fetched renders instantly.
+React Query caches each `(page, pageSize)` combination separately.
 
 ### `EmployeesPage.tsx`
 
-- `const [page, setPage] = useState(1)` — current page
-- `const { data, isLoading, isError } = useEmployees(page)`
+- `const [page, setPage] = useState(1)` — current page, resets to 1 when pageSize changes
+- `const [pageSize, setPageSize] = useState(20)` — current page size; options: 20, 50, 100
+- `const { data, isLoading, isError } = useEmployees(page, pageSize)`
 - Table `dataSource={data?.employees ?? []}`, `loading={isLoading}`
-- AntD Table `pagination={{ current: page, pageSize: 20, total: data?.total ?? 0, onChange: setPage, showSizeChanger: false }}`
+- AntD Table `pagination={{ current: page, pageSize, total, onChange: (p, ps) => { setPage(p); setPageSize(ps); }, showSizeChanger: true, pageSizeOptions: [20, 50, 100] }}`
+- AntD resets `p` to `1` automatically when `ps` changes, so no extra logic needed.
 
 **Column order:** ID, Name, Country, Salary, Employment Type, Actions. Role, Department, Email, Joining Date, and Gender are all visible in the View modal only.
 

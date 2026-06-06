@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace client-side pagination with server-side pagination so the browser fetches exactly 20 employees per page instead of all 10,000 at once.
+**Goal:** Replace client-side pagination with server-side pagination so the browser fetches one page at a time, with a user-selectable page size (default 20, options 20/50/100).
 
-**Architecture:** `GET /api/employees?page=1&pageSize=20` returns `{ employees: Employee[], total: number }`. The repository does a `COUNT(*)` and a `LIMIT/OFFSET` query in parallel. The frontend tracks page in `useState`, passes it to `useEmployees(page)`, and hands `total` to AntD Table's `pagination` prop so it renders the correct page controls.
+**Architecture:** `GET /api/employees?page=1&pageSize=20` returns `{ employees: Employee[], total: number }`. The repository does a `COUNT(*)` and `LIMIT/OFFSET` in parallel. The frontend tracks `page` and `pageSize` in `useState`, passes both to `useEmployees(page, pageSize)`, and wires AntD Table's `pagination` prop with `showSizeChanger: true` and `pageSizeOptions: [20, 50, 100]`.
 
 **Tech Stack:** Express + Knex (SQLite), React Query, AntD Table, Jest/Supertest (backend), Vitest + React Testing Library (frontend).
 
@@ -21,8 +21,8 @@
 | `server/tests/services/employeeService.test.ts` | Update `makeRepo` factory, update `listEmployees` test |
 | `server/tests/routes/employees.test.ts` | Update `makeService` mock shape, replace GET test, add param validation tests |
 | `client/src/api/employees.ts` | `fetchEmployees(page, pageSize)` with query params, return `{ employees, total }` |
-| `client/src/hooks/useEmployees.ts` | Accept `page` param, include in query key |
-| `client/src/pages/EmployeesPage.tsx` | Add `page` state, remove Role/Department columns, wire server pagination |
+| `client/src/hooks/useEmployees.ts` | Accept `page` and `pageSize` params, include both in query key |
+| `client/src/pages/EmployeesPage.tsx` | Add `page` + `pageSize` state, remove Role/Department columns, wire server pagination with size changer |
 | `client/src/pages/__tests__/EmployeesPage.test.tsx` | Update mock data shape, update affected tests |
 
 ---
@@ -491,13 +491,15 @@ Replace the full contents of `client/src/hooks/useEmployees.ts`:
 import { useQuery } from '@tanstack/react-query';
 import { fetchEmployees } from '../api/employees';
 
-export function useEmployees(page: number) {
+export function useEmployees(page: number, pageSize: number) {
   return useQuery({
-    queryKey: ['employees', page],
-    queryFn: () => fetchEmployees(page),
+    queryKey: ['employees', page, pageSize],
+    queryFn: () => fetchEmployees(page, pageSize),
   });
 }
 ```
+
+React Query caches each `(page, pageSize)` combination independently.
 
 - [ ] **Step 3: Check TypeScript compiles**
 
@@ -659,8 +661,9 @@ type ModalState =
 
 export default function EmployeesPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [modalState, setModalState] = useState<ModalState>({ open: false });
-  const { data, isLoading, isError } = useEmployees(page);
+  const { data, isLoading, isError } = useEmployees(page, pageSize);
   const deleteMutation = useDeleteEmployee();
 
   function openModal(mode: 'view' | 'edit' | 'create', employeeId: number | null) {
@@ -762,7 +765,17 @@ export default function EmployeesPage() {
           columns={columns}
           rowKey="id"
           loading={isLoading}
-          pagination={{ current: page, pageSize: 20, total, onChange: setPage, showSizeChanger: false }}
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            onChange: (newPage, newPageSize) => {
+              setPage(newPage);
+              setPageSize(newPageSize);
+            },
+            showSizeChanger: true,
+            pageSizeOptions: [20, 50, 100],
+          }}
         />
       </div>
       <Modal

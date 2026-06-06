@@ -127,7 +127,7 @@ Role, Department, Email, Joining Date, and Gender are not shown in the table —
 - Clicking `⋮` opens an AntD `Dropdown` with: **View**, **Edit**, **Delete** (danger color)
 - No inline action buttons on rows
 
-**Pagination**: AntD `Table` built-in, 20 rows per page, `showSizeChanger: false`
+**Pagination**: AntD `Table` built-in, default 20 rows per page, `showSizeChanger: true`, options: 20, 50, 100
 
 ### 5.2 Employee Form Modal (Create / View / Edit)
 
