@@ -30,7 +30,7 @@ All colors come from the Ant Design v5 theme token system. The primary brand col
 | `colorBorder` | `#e8e8e8` | Card borders, dividers |
 | `colorTextSecondary` | `#888888` | Labels, subtitles, hints |
 
-Configure once in `client/src/main.tsx` via `<ConfigProvider theme={{ token: { colorPrimary: '#1677ff' } }}>`.
+Configure once in `client/src/App.tsx` via `<ConfigProvider theme={{ token: { colorPrimary: '#1677ff' } }}>`.
 
 ---
 
@@ -54,59 +54,102 @@ Use Ant Design's default font stack. Do not introduce custom fonts.
 
 ### Page shell
 
-Every page uses the same shell:
+`AppLayout` wraps all routes and provides the consistent shell:
 
 ```
-┌─────────────────────────────────────────────┐
-│  Top nav bar  (logo + nav links)            │
-├─────────────────────────────────────────────┤
-│  Page area  (background: #f5f5f5)           │
-│  ┌─────────────────────────────────────┐    │
-│  │  Content card  (max-width: 900px)   │    │
-│  │  border-radius: 10px                │    │
-│  │  box-shadow: 0 2px 8px rgba(0,0,0,.06)  │
-│  └─────────────────────────────────────┘    │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  ACME Salary Management          Employees                   │  ← 56px nav bar
+├──────────────────────────────────────────────────────────────┤
+│  Page background: #f5f5f5, padding: 24px                    │
+│                                                              │
+│  [page content — full width for Employees; 900px card        │
+│   for future content-light pages like Insights, Upload]      │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-- Page background: `#f5f5f5`
-- Content card: white, `border-radius: 10px`, `box-shadow: 0 2px 8px rgba(0,0,0,0.06)`, `border: 1px solid #e8e8e8`
-- Max content width: **900px**, centered
-- Page padding: `24px`
-
-### Top navigation bar
+### Top navigation bar (`AppLayout`)
 
 - Background: `#fff`, `border-bottom: 1px solid #e8e8e8`
-- Left: product logo/name "ACME Salary Management"
-- Nav links: Employees, Insights (Feature 6), Upload (Feature 7)
+- Left: product name "ACME Salary Management" (bold, 16px)
+- Nav links: right-aligned horizontal AntD `Menu`
+  - Currently: **Employees** (active — highlighted in `colorPrimary`)
+  - Add **Insights** and **Upload** when those features are built
 - Height: 56px
 
-### Breadcrumb
+### Content area
 
-Every detail and form page shows a breadcrumb bar inside the content card:
-
-```
-← Employees / Alice Johnson
-```
-
-- Background: `#fafafa`, `border-bottom: 1px solid #e8e8e8`, padding `12px 20px`
-- Back link in `colorPrimary`, chevron `/` separator in `#ccc`
-- Action buttons (Save/Cancel or Edit/Delete) placed in the **right side of this bar**
+- Background: `#f5f5f5`, padding `24px`
+- **Employees page**: full viewport width — no max-width constraint
+- **Future pages** (Insights, Upload): white content card, `max-width: 900px`, centered, `border-radius: 10px`, `box-shadow: 0 2px 8px rgba(0,0,0,0.06)`, `border: 1px solid #e8e8e8`
 
 ---
 
 ## 5. Component Patterns
 
-### 5.1 Employee Form Page (Create / View / Edit)
+### 5.1 Employees Page — Full-Width Table
 
-One React component (`EmployeeFormPage`) with a `mode` prop: `'create' | 'view' | 'edit'`.
+`EmployeesPage` renders a full-width AntD `Table`. All CRUD operations open a modal — no sub-routes.
 
-**Identity block (view and edit modes only):**
-- Avatar circle — initials from first + last name, gradient background (`linear-gradient(135deg, #1677ff, #722ed1)`)
+**Page header row** (above the table card):
+- Left: "Employees" — 20px, weight 700
+- Right: "New Employee" — AntD `Button` type `primary`
+- `margin-bottom: 16px`
+
+**Table card**: white, `border-radius: 10px`, `box-shadow: 0 2px 8px rgba(0,0,0,0.06)`, `border: 1px solid #e8e8e8`
+
+**Table columns**:
+
+| Column | Notes |
+|---|---|
+| Name | Plain text |
+| Role | Plain text |
+| Department | Plain text |
+| Country | Plain text |
+| Salary | Currency symbol (from country) + `toLocaleString()`, right-aligned |
+| Employment Type | AntD `Tag` — green for Full-time, orange for Contractor |
+| Actions | Single `⋮` icon button (AntD `Dropdown`) |
+
+Joining Date, Email, Gender, and ID are not shown in the table — they are visible in the View modal.
+
+**Currency symbol map** (in `client/src/utils/currency.ts`):
+
+| Country | Symbol |
+|---|---|
+| USA | $ |
+| United Kingdom | £ |
+| Germany | € |
+| France | € |
+| India | ₹ |
+| Japan | ¥ |
+| Brazil | R$ |
+| Australia | A$ |
+
+**Actions dropdown** (per row):
+- Clicking `⋮` opens an AntD `Dropdown` with: **View**, **Edit**, **Delete** (danger color)
+- No inline action buttons on rows
+
+**Pagination**: AntD `Table` built-in, 20 rows per page, `showSizeChanger: false`
+
+### 5.2 Employee Form Modal (Create / View / Edit)
+
+One React component (`EmployeeForm`) with a `mode` prop: `'create' | 'view' | 'edit'`. Used as the body of an AntD `Modal` (width 640px, `destroyOnHidden`, `footer={null}`).
+
+**View mode identity block:**
+- Avatar circle — 40px, initials from first + last name, `linear-gradient(135deg, #1677ff, #722ed1)` background, white text
 - Name at 18px bold, email below in `colorTextSecondary`
-- Badge chips: Role (blue), Department (indigo), Employment Type (green for Full-time, orange for Contractor)
+- Badge chips: Role (blue), Department (purple), Employment Type (green/orange)
+- Actions (Edit + Delete) at bottom-right of the identity block
 
-**Field sections** — three sections separated by dividers:
+**Edit mode identity block:**
+- Avatar circle — 32px (same gradient)
+- "Editing: {name}" label at 15px bold
+- Actions (Cancel + Save) at right
+
+**Create mode header:**
+- "New Employee" label — no avatar
+- Actions (Cancel + Save) at right
+
+**Field sections** — three sections separated by section headers:
 
 | Section | Fields |
 |---|---|
@@ -123,7 +166,7 @@ Section header style: 12px, bold, `colorPrimary`, uppercase, 0.8px letter-spacin
 **View mode fields:**
 - Label: uppercase, `colorTextSecondary`, 11px
 - Value: plain text, 14px
-- Salary: 18px bold with "local currency" hint below
+- Salary: 18px bold with "Local currency" hint below
 
 **Edit/Create mode fields:**
 - AntD `Form` + `Form.Item` for each field
@@ -131,29 +174,12 @@ Section header style: 12px, bold, `colorPrimary`, uppercase, 0.8px letter-spacin
 - Selects (Gender, Employment Type): AntD `Select`
 - Date: AntD `DatePicker`, stored as `YYYY-MM-DD`
 - Salary: AntD `InputNumber`
-- Required indicator: red `*` next to label
-
-**Breadcrumb bar actions:**
-
-| Mode | Left | Right |
-|---|---|---|
-| View | `← Employees / {name}` | Edit button (outline primary) + Delete button (outline danger) |
-| Edit | `← Employees / {name}` | Cancel button (default) + Save Employee button (primary) |
-| Create | `← Employees / New Employee` | Cancel button (default) + Save Employee button (primary) |
 
 **Delete confirmation:**
 - AntD `Modal.confirm` (not a custom modal)
 - Title: "Delete employee?"
 - Content: "This will permanently delete **{name}**. This action cannot be undone."
 - OK button: danger type, label "Delete"
-- Cancel: default
-
-### 5.2 Employee List (stub for Feature 3, full in Feature 4)
-
-- AntD `Table` component
-- Columns: ID, Name, Email, Role, Department, Country, Salary, Employment Type, Joining Date
-- Each row is clickable — navigates to `/employees/:id`
-- No pagination in the stub (Feature 4 adds pagination + search)
 
 ### 5.3 Status Badges
 
@@ -169,19 +195,20 @@ Use AntD `Tag` component for inline status chips:
 
 ### 5.4 Loading States
 
-- Page-level loading: AntD `Spin` centered in the content card, size `large`
+- Table loading: AntD `Table` with `loading={true}` prop — shows spinner overlay
+- Modal content loading: AntD `Spin` centered, size `large`
 - Button loading: AntD `Button` with `loading` prop during form submit
 
 ### 5.5 Error States
 
-- API errors on fetch: AntD `Result` component, status `500`, with a "Try again" button
-- 404 (employee not found): AntD `Result`, status `404`, with a back link
+- API errors on table fetch: AntD `Alert` type `error`, message "Failed to load employees"
+- API errors on single employee fetch: AntD `Alert` type `error`, message "Failed to load employee"
 - Form validation errors: AntD `Form` inline validation — errors appear below the relevant field, never as toasts
 
 ### 5.6 Success Feedback
 
-- After create/edit: navigate back to `/employees/:id` (view mode) — no toast needed; the redirect is the confirmation
-- After delete: navigate to `/employees`, show AntD `message.success('Employee deleted')` (auto-dismisses)
+- After create/edit: close modal — `useEmployees` cache is invalidated, table refreshes automatically
+- After delete: close modal (or confirm dialog), show AntD `message.success('Employee deleted')` (auto-dismisses)
 
 ---
 
@@ -189,11 +216,17 @@ Use AntD `Tag` component for inline status chips:
 
 | Path | Component | Notes |
 |---|---|---|
-| `/employees` | `EmployeesPage` | All employee operations happen here |
+| `/employees` | `EmployeesPage` | Table + modal for all CRUD operations |
 
 The root `/` redirects to `/employees`.
 
-All CRUD operations (create, view, edit, delete) are handled via panel state inside `EmployeesPage` — no sub-routes. The left pane shows the employee list; the right pane switches between `empty`, `view`, `edit`, and `create` modes based on user interaction.
+All CRUD operations (create, view, edit, delete) are handled via modal state inside `EmployeesPage` — no sub-routes. Modal state shape:
+
+```typescript
+type ModalState =
+  | { open: false }
+  | { open: true; mode: 'view' | 'edit' | 'create'; employeeId: number | null };
+```
 
 ---
 
@@ -210,8 +243,9 @@ All CRUD operations (create, view, edit, delete) are handled via panel state ins
 ## 8. Do Nots
 
 - Do not use inline `style` to override Ant Design component internals — use `theme` tokens or `className`
-- Do not place Save/Cancel at the bottom of the form — they live in the breadcrumb bar
-- Do not use custom modal components — use `Modal.confirm` for confirmations and AntD `Modal` for any other dialogs
-- Do not show toasts for navigating actions (create/edit redirect) — only for destructive completions (delete)
+- Do not place Save/Cancel at the bottom of the form — they live in the identity block header area
+- Do not use custom modal components — use `Modal.confirm` for confirmations, AntD `Modal` for CRUD
+- Do not show toasts for navigating actions (create/edit close modal) — only for destructive completions (delete)
 - Do not add responsive breakpoints — desktop only
 - Do not put business logic in React components — keep it in the API/hooks layer
+- Do not navigate to sub-routes for employee detail/edit — use the modal
