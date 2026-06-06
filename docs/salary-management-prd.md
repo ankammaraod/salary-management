@@ -40,7 +40,7 @@ ACME's HR team manages salary records for 10,000 employees across multiple count
 | department | Text | Business unit |
 | country | Text | Also determines salary currency |
 | salary | Number | In the country's local currency |
-| employment_type | Enum | Full-time / Part-time / Contractor |
+| employment_type | Enum | Full-time / Contractor |
 | joining_date | Date | |
 
 Salary is stored in the employee's local currency. Currency is derived from country via a fixed reference map — no FX conversion anywhere in the system.
@@ -51,7 +51,7 @@ Salary is stored in the employee's local currency. Currency is derived from coun
 
 ### Feature 1 — Employee List (home screen)
 
-Paginated table of all 10,000 employees. Single global search box (searches by name and email). Each row links to the employee detail view.
+Paginated table of all 10,000 employees showing: ID, name, email, role, department, country, salary, employment type, joining date. Single global search box — matches against ID, name, email, role, department, and country. Salary is explicitly excluded from search. Each row links to the employee detail view.
 
 ### Feature 2 — Employee Management (CRUD)
 
@@ -67,7 +67,7 @@ A dedicated page with a country selector (defaults to "Select a country"). Once 
 **Workforce overview**
 - Total headcount in country
 - Gender breakdown — headcount by gender (Male / Female / Other)
-- Employment type breakdown — headcount by Full-time / Part-time / Contractor
+- Employment type breakdown — headcount by Full-time / Contractor
 
 **Compensation summary**
 - Average salary, minimum salary, maximum salary (in local currency)
