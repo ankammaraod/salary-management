@@ -3,8 +3,11 @@ import knex from 'knex';
 import knexConfig from '../knexfile';
 import healthRouter from './routes/health';
 import { createEmployeeRouter } from './routes/employees';
+import { createInsightsRouter } from './routes/insights';
 import { EmployeeRepository } from './repositories/employeeRepository';
 import { EmployeeService } from './services/employeeService';
+import { InsightsRepository } from './repositories/insightsRepository';
+import { InsightsService } from './services/insightsService';
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
 
@@ -16,9 +19,12 @@ export function createApp(): Express {
   const db = knex(knexConfig[env]);
   const employeeRepo = new EmployeeRepository(db);
   const employeeService = new EmployeeService(employeeRepo);
+  const insightsRepo = new InsightsRepository(db);
+  const insightsService = new InsightsService(insightsRepo);
 
   app.use('/api/health', healthRouter);
   app.use('/api/employees', createEmployeeRouter(employeeService));
+  app.use('/api/insights', createInsightsRouter(insightsService));
 
   app.use(notFound);
   app.use(errorHandler);
