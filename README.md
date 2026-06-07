@@ -14,12 +14,13 @@ Web tool for an HR Manager to manage employees and view salary insights for a 10
 
 Fastest path is Docker:
 
-```
-docker compose up
+```bash
+docker build -t salary-management .
+docker run -p 3000:3000 salary-management
 # visit http://localhost:3000
 ```
 
-The container seeds 10,000 employees on first boot.
+The container runs migrations, seeds 10,000 employees, then starts the server on each boot.
 
 For development with hot reload, run the workspaces natively:
 
