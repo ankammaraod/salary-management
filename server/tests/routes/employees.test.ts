@@ -46,16 +46,28 @@ describe('GET /api/employees', () => {
     expect(res.body.total).toBe(1);
   });
 
-  it('defaults page to 1, pageSize to 20, and search to empty string when params are absent', async () => {
+  it('defaults page to 1, pageSize to 20, search to empty string, and order to desc', async () => {
     const service = makeService();
     await request(makeApp(service)).get('/api/employees');
-    expect(service.listEmployees).toHaveBeenCalledWith(1, 20, '');
+    expect(service.listEmployees).toHaveBeenCalledWith(1, 20, '', 'desc');
   });
 
   it('passes search param to listEmployees', async () => {
     const service = makeService();
     await request(makeApp(service)).get('/api/employees?search=alice');
-    expect(service.listEmployees).toHaveBeenCalledWith(1, 20, 'alice');
+    expect(service.listEmployees).toHaveBeenCalledWith(1, 20, 'alice', 'desc');
+  });
+
+  it('passes order=asc to listEmployees when ?order=asc', async () => {
+    const service = makeService();
+    await request(makeApp(service)).get('/api/employees?order=asc');
+    expect(service.listEmployees).toHaveBeenCalledWith(1, 20, '', 'asc');
+  });
+
+  it('defaults order to desc for unknown order values', async () => {
+    const service = makeService();
+    await request(makeApp(service)).get('/api/employees?order=invalid');
+    expect(service.listEmployees).toHaveBeenCalledWith(1, 20, '', 'desc');
   });
 
   it('returns 400 when page is not a number', async () => {

@@ -29,12 +29,12 @@ function makeRepo(overrides: Partial<IEmployeeRepository> = {}): IEmployeeReposi
 }
 
 describe('listEmployees', () => {
-  it('delegates page, pageSize, and empty search to repo.findPage', async () => {
+  it('delegates page, pageSize, and empty search to repo.findPage with default order desc', async () => {
     const pageResult = { employees: [ALICE], total: 1 };
     const repo = makeRepo({ findPage: jest.fn().mockResolvedValue(pageResult) });
     const service = new EmployeeService(repo);
     const result = await service.listEmployees(1, 20);
-    expect(repo.findPage).toHaveBeenCalledWith(1, 20, '');
+    expect(repo.findPage).toHaveBeenCalledWith(1, 20, '', 'desc');
     expect(result).toEqual(pageResult);
   });
 
@@ -43,7 +43,14 @@ describe('listEmployees', () => {
     const repo = makeRepo({ findPage: jest.fn().mockResolvedValue(pageResult) });
     const service = new EmployeeService(repo);
     await service.listEmployees(1, 20, 'alice');
-    expect(repo.findPage).toHaveBeenCalledWith(1, 20, 'alice');
+    expect(repo.findPage).toHaveBeenCalledWith(1, 20, 'alice', 'desc');
+  });
+
+  it('passes order=asc to repo.findPage', async () => {
+    const repo = makeRepo({ findPage: jest.fn().mockResolvedValue({ employees: [], total: 0 }) });
+    const service = new EmployeeService(repo);
+    await service.listEmployees(1, 20, '', 'asc');
+    expect(repo.findPage).toHaveBeenCalledWith(1, 20, '', 'asc');
   });
 });
 

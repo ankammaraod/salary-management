@@ -181,6 +181,22 @@ describe('insertMany', () => {
   });
 });
 
+describe('findPage sort order', () => {
+  it('returns employees in descending id order by default', async () => {
+    await repo.create(VALID_DTO);
+    await repo.create({ ...VALID_DTO, email: 'bob@example.com', name: 'Bob' });
+    const result = await repo.findPage(1, 20);
+    expect(result.employees[0].id).toBeGreaterThan(result.employees[1].id);
+  });
+
+  it('returns employees in ascending id order when order is asc', async () => {
+    await repo.create(VALID_DTO);
+    await repo.create({ ...VALID_DTO, email: 'bob@example.com', name: 'Bob' });
+    const result = await repo.findPage(1, 20, '', 'asc');
+    expect(result.employees[0].id).toBeLessThan(result.employees[1].id);
+  });
+});
+
 describe('findExistingEmails', () => {
   it('returns empty array when none of the emails exist', async () => {
     const result = await repo.findExistingEmails(['nobody@example.com']);

@@ -9,11 +9,12 @@ export class EmployeeController {
     const page = Number(req.query.page ?? 1);
     const pageSize = Number(req.query.pageSize ?? 20);
     const search = String(req.query.search ?? '');
+    const order: 'asc' | 'desc' = req.query.order === 'asc' ? 'asc' : 'desc';
 
     if (!Number.isInteger(page) || page < 1) return next(new ValidationError('page must be a positive integer'));
     if (!Number.isInteger(pageSize) || pageSize < 1) return next(new ValidationError('pageSize must be a positive integer'));
 
-    res.json(await this.service.listEmployees(page, pageSize, search));
+    res.json(await this.service.listEmployees(page, pageSize, search, order));
   }
 
   async get(req: Request, res: Response, next: NextFunction): Promise<void> {
