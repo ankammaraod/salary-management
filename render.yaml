@@ -1,11 +1,16 @@
+# Exported from Render on 2026-06-07T15:45:24Z
+version: "1"
 services:
-  - type: web
-    name: salary-management
-    runtime: docker
-    plan: free
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
-    envVars:
-      - key: NODE_ENV
-        value: production
-    healthCheckPath: /api/health
+- type: web
+  name: salary-management
+  runtime: docker
+  repo: https://github.com/ankammaraod/salary-management
+  plan: free
+  envVars:
+  - key: NODE_ENV
+    sync: false
+  region: oregon
+  healthCheckPath: /api/health
+  dockerContext: .
+  dockerfilePath: ./Dockerfile
+  autoDeployTrigger: commit
