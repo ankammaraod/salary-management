@@ -69,4 +69,15 @@ export class EmployeeRepository implements IEmployeeRepository {
   async deleteById(id: number): Promise<void> {
     await this.knex('employees').where({ id }).delete();
   }
+
+  async insertMany(rows: CreateEmployeeDto[]): Promise<void> {
+    if (rows.length === 0) return;
+    await this.knex('employees').insert(rows);
+  }
+
+  async findExistingEmails(emails: string[]): Promise<string[]> {
+    if (emails.length === 0) return [];
+    const rows = await this.knex('employees').whereIn('email', emails).select('email');
+    return rows.map((r: { email: string }) => r.email);
+  }
 }

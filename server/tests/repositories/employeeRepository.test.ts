@@ -163,3 +163,38 @@ describe('findPage with search', () => {
     expect(result.employees).toHaveLength(0);
   });
 });
+
+describe('insertMany', () => {
+  it('inserts all rows and they can be retrieved', async () => {
+    const rows = [
+      { ...VALID_DTO, email: 'bulk1@example.com' },
+      { ...VALID_DTO, email: 'bulk2@example.com' },
+    ];
+    await repo.insertMany(rows);
+    const result = await repo.findPage(1, 20);
+    expect(result.total).toBe(2);
+  });
+
+  it('throws when a row has a duplicate email already in the DB', async () => {
+    await repo.create(VALID_DTO);
+    await expect(repo.insertMany([VALID_DTO])).rejects.toThrow();
+  });
+});
+
+describe('findExistingEmails', () => {
+  it('returns empty array when none of the emails exist', async () => {
+    const result = await repo.findExistingEmails(['nobody@example.com']);
+    expect(result).toEqual([]);
+  });
+
+  it('returns emails that already exist in the DB', async () => {
+    await repo.create(VALID_DTO);
+    const result = await repo.findExistingEmails([VALID_DTO.email, 'other@example.com']);
+    expect(result).toEqual([VALID_DTO.email]);
+  });
+
+  it('returns empty array when given an empty list', async () => {
+    const result = await repo.findExistingEmails([]);
+    expect(result).toEqual([]);
+  });
+});
