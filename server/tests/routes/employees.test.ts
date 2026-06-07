@@ -46,10 +46,16 @@ describe('GET /api/employees', () => {
     expect(res.body.total).toBe(1);
   });
 
-  it('defaults page to 1 and pageSize to 20 when params are absent', async () => {
+  it('defaults page to 1, pageSize to 20, and search to empty string when params are absent', async () => {
     const service = makeService();
     await request(makeApp(service)).get('/api/employees');
-    expect(service.listEmployees).toHaveBeenCalledWith(1, 20);
+    expect(service.listEmployees).toHaveBeenCalledWith(1, 20, '');
+  });
+
+  it('passes search param to listEmployees', async () => {
+    const service = makeService();
+    await request(makeApp(service)).get('/api/employees?search=alice');
+    expect(service.listEmployees).toHaveBeenCalledWith(1, 20, 'alice');
   });
 
   it('returns 400 when page is not a number', async () => {

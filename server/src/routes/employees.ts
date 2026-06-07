@@ -8,10 +8,11 @@ export function createEmployeeRouter(service: EmployeeService): Router {
   router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const page = Number(req.query.page ?? 1);
     const pageSize = Number(req.query.pageSize ?? 20);
+    const search = String(req.query.search ?? '');
     if (!Number.isInteger(page) || page < 1) return next(new ValidationError('page must be a positive integer'));
     if (!Number.isInteger(pageSize) || pageSize < 1) return next(new ValidationError('pageSize must be a positive integer'));
     try {
-      res.json(await service.listEmployees(page, pageSize));
+      res.json(await service.listEmployees(page, pageSize, search));
     } catch (err) { next(err); }
   });
 
