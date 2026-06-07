@@ -1,51 +1,20 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import type { EmployeeService } from '../services/employeeService';
-import { ValidationError } from '../middleware/errors';
+import { createEmployeeController } from '../controllers/employeeController';
+
+type AsyncHandler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
+const wrap = (fn: AsyncHandler) => (req: Request, res: Response, next: NextFunction) =>
+  fn(req, res, next).catch(next);
 
 export function createEmployeeRouter(service: EmployeeService): Router {
   const router = Router();
+  const ctrl = createEmployeeController(service);
 
-  router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-    const page = Number(req.query.page ?? 1);
-    const pageSize = Number(req.query.pageSize ?? 20);
-    const search = String(req.query.search ?? '');
-    if (!Number.isInteger(page) || page < 1) return next(new ValidationError('page must be a positive integer'));
-    if (!Number.isInteger(pageSize) || pageSize < 1) return next(new ValidationError('pageSize must be a positive integer'));
-    try {
-      res.json(await service.listEmployees(page, pageSize, search));
-    } catch (err) { next(err); }
-  });
-
-  router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
-    const id = Number(req.params.id);
-    if (isNaN(id)) return next(new ValidationError('id must be a number'));
-    try {
-      res.json(await service.getEmployee(id));
-    } catch (err) { next(err); }
-  });
-
-  router.post('/', async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      res.status(201).json(await service.createEmployee(req.body));
-    } catch (err) { next(err); }
-  });
-
-  router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
-    const id = Number(req.params.id);
-    if (isNaN(id)) return next(new ValidationError('id must be a number'));
-    try {
-      res.json(await service.updateEmployee(id, req.body));
-    } catch (err) { next(err); }
-  });
-
-  router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
-    const id = Number(req.params.id);
-    if (isNaN(id)) return next(new ValidationError('id must be a number'));
-    try {
-      await service.deleteEmployee(id);
-      res.status(204).send();
-    } catch (err) { next(err); }
-  });
+  router.get('/', wrap(ctrl.list));
+  router.get('/:id', wrap(ctrl.get));
+  router.post('/', wrap(ctrl.create));
+  router.put('/:id', wrap(ctrl.update));
+  router.delete('/:id', wrap(ctrl.remove));
 
   return router;
 }

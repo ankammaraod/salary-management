@@ -35,6 +35,11 @@ A monorepo containing a React frontend and a Node.js/Express backend. The fronte
 │  │                                                     │   │
 │  │  ┌─────────────────────────────────────────────┐   │   │
 │  │  │              routes/                        │   │   │
+│  │  │   Map HTTP method + path → controller       │   │   │
+│  │  └───────────────────┬─────────────────────────┘   │   │
+│  │                      │                              │   │
+│  │  ┌───────────────────▼─────────────────────────┐   │   │
+│  │  │              controllers/                   │   │   │
 │  │  │   Parse request → call service → respond    │   │   │
 │  │  └───────────────────┬─────────────────────────┘   │   │
 │  │                      │ DI: service injected          │   │
@@ -95,7 +100,8 @@ salary-management/
 ```
 server/
 ├── src/
-│   ├── routes/              # HTTP layer — parse request, call service, send response
+│   ├── routes/              # HTTP routing — map method + path to controller
+│   ├── controllers/         # HTTP handlers — parse request, call service, send response
 │   ├── services/            # Business logic — validation, rules, orchestration
 │   ├── repositories/        # Data layer — all Knex queries, nothing else
 │   ├── types/               # Shared TypeScript interfaces
@@ -122,12 +128,12 @@ server/
 | Non-numeric `:id` params | Routes return 400 `{ error: 'id must be a number' }` before calling the service |
 | Repository post-write safety | `create` and `update` throw `Error` if `findById` returns null after the write, rather than silently returning a typed null |
 
-### Three-layer architecture with dependency injection
+### Four-layer architecture with dependency injection
 
-Each layer has one responsibility. Dependencies flow inward — routes depend on services, services depend on repositories. Nothing depends outward.
+Each layer has one responsibility. Dependencies flow inward — routes depend on controllers, controllers depend on services, services depend on repositories. Nothing depends outward.
 
 ```
-Route → Service → Repository → SQLite
+Route → Controller → Service → Repository → SQLite
 ```
 
 Dependency injection is manual — no framework. Each layer receives its dependency as a constructor argument. In tests, a fake is injected at the seam being tested. TypeScript interfaces enforce that fakes cannot silently drift from the real implementation.
@@ -211,6 +217,7 @@ Each layer tests exactly one thing. When a test fails, you know which layer brok
 | Layer | Pattern | Example |
 |---|---|---|
 | Routes | `<resource>.ts` | `employees.ts` |
+| Controllers | `<resource>Controller.ts` | `employeeController.ts` |
 | Services | `<resource>Service.ts` | `employeeService.ts` |
 | Repositories | `<resource>Repository.ts` | `employeeRepository.ts` |
 | Types | `<resource>.ts` inside `types/` | `types/employee.ts` |
@@ -243,8 +250,8 @@ Each layer tests exactly one thing. When a test fails, you know which layer brok
 
 1. HR Manager types "Alice" in the search box
 2. React Query fires `GET /api/employees?search=Alice&page=1&pageSize=20`
-3. Express route parses query params
-4. Route calls the employee service with the search parameters
+3. Express route delegates to the employee controller
+4. Controller parses query params and calls the employee service with the search parameters
 5. Service validates params and calls the repository
 6. Repository queries SQLite matching `id`, `name`, `email`, `role`, `department`, `country` against "Alice"
 7. Repository returns a typed employee list to the service
