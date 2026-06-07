@@ -18,8 +18,10 @@ export class EmployeeRepository implements IEmployeeRepository {
 
     const withSearch = (qb: Knex.QueryBuilder): Knex.QueryBuilder => {
       if (!search) return qb;
+
       const escaped = search.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
       const term = `%${escaped}%`;
+
       return qb.where(function () {
         this.whereRaw("CAST(id AS TEXT) LIKE ? ESCAPE '\\'", [term])
           .orWhereRaw("name LIKE ? ESCAPE '\\'", [term])
@@ -34,6 +36,7 @@ export class EmployeeRepository implements IEmployeeRepository {
       withSearch(this.knex('employees')).count('* as count').first<{ count: number | string }>(),
       withSearch(this.knex('employees').select('*')).limit(pageSize).offset(offset),
     ]);
+
     return { employees, total: Number(countRow?.count ?? 0) };
   }
 
@@ -48,14 +51,18 @@ export class EmployeeRepository implements IEmployeeRepository {
   async create(dto: CreateEmployeeDto): Promise<Employee> {
     const [id] = await this.knex('employees').insert(dto);
     const created = await this.findById(id);
+
     if (!created) throw new Error('failed to retrieve employee after insert');
+
     return created;
   }
 
   async update(id: number, dto: CreateEmployeeDto): Promise<Employee> {
     await this.knex('employees').where({ id }).update(dto);
     const updated = await this.findById(id);
+
     if (!updated) throw new Error('failed to retrieve employee after update');
+
     return updated;
   }
 

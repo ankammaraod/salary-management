@@ -138,7 +138,7 @@ Route → Controller → Service → Repository → SQLite
 
 Controllers, services, and repositories are all TypeScript classes. Dependency injection is manual — no framework. Each class receives its dependency via the constructor. In tests, a fake is injected at the seam being tested. TypeScript interfaces enforce that fakes cannot silently drift from the real implementation.
 
-Controller methods are arrow function class fields (`list = async (...) => { ... }`). This binds `this` at construction time so methods can be passed directly as Express callbacks without losing context.
+Controller methods are regular `async` methods. Because they are passed as bare callbacks to Express (`wrap(ctrl.list)`), the constructor explicitly binds each method: `this.list = this.list.bind(this)`. This preserves `this` without using arrow function class fields.
 
 **`app.ts` vs `server.ts` split** — `app.ts` exports the Express app without calling `listen()`. Tests import `app.ts` directly — no port conflicts, no real server needed.
 
@@ -252,6 +252,25 @@ Each layer tests exactly one thing. When a test fails, you know which layer brok
 - **Constants** — `SCREAMING_SNAKE_CASE` (`DEFAULT_PAGE_SIZE`, `EMPLOYMENT_TYPES`, `GENDER_OPTIONS`)
 - **Error messages** — lowercase, plain English, actionable (`'employee not found'`, `'email already exists'`)
 - **Comments** — only when the *why* is non-obvious. Never describe what the code does.
+- **Class methods** — use regular `async` methods, not arrow function class fields. Bind in the constructor when methods are passed as callbacks.
+- **Line breaks** — one blank line between each method body in a class for readability.
+
+### Linting
+
+Both `server/` and `client/` are configured with ESLint (`eslint.config.mjs`). Run with `npm run lint` in either directory.
+
+**Enforced rules:**
+
+| Rule | Applies to | Why |
+|---|---|---|
+| `no-var` | all files | `const`/`let` only |
+| `prefer-const` | all files | avoids accidental reassignment |
+| `@typescript-eslint/no-explicit-any` | src files | forces proper typing |
+| `@typescript-eslint/no-unused-vars` | all files | dead code surfaced immediately; prefix `_` to intentionally ignore |
+| `react-hooks/rules-of-hooks` | client src | prevents hook misuse |
+| `react-hooks/exhaustive-deps` | client src | prevents stale closure bugs |
+
+`no-explicit-any` is relaxed in test files — mock objects routinely need `as any` to satisfy partial type casts against full library types (e.g., `UseQueryResult`).
 
 ---
 
