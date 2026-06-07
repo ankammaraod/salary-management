@@ -107,4 +107,21 @@ describe('UploadService.bulkUpload', () => {
     await service.bulkUpload([{ ...VALID_DTO, name: '' }]).catch(() => {});
     expect(repo.insertMany).not.toHaveBeenCalled();
   });
+
+  it('normalizes email to lowercase before inserting', async () => {
+    const repo = makeRepo();
+    const service = new UploadService(repo);
+    await service.bulkUpload([{ ...VALID_DTO, email: 'Alice@Example.COM' }]);
+    expect(repo.insertMany).toHaveBeenCalledWith([
+      expect.objectContaining({ email: 'alice@example.com' }),
+    ]);
+  });
+
+  it('detects DB conflict case-insensitively', async () => {
+    const repo = makeRepo({ findExistingEmails: jest.fn().mockResolvedValue(['alice@example.com']) });
+    const service = new UploadService(repo);
+    const err = await service.bulkUpload([{ ...VALID_DTO, email: 'Alice@Example.COM' }]).catch(e => e) as BulkValidationError;
+    expect(err).toBeInstanceOf(BulkValidationError);
+    expect(err.details.errors[0]).toMatchObject({ index: 0, field: 'email', message: 'email already exists' });
+  });
 });
