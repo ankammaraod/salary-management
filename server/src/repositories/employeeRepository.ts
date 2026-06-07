@@ -2,7 +2,7 @@ import type { Knex } from 'knex';
 import type { Employee, CreateEmployeeDto } from '../types/employee';
 
 export interface IEmployeeRepository {
-  findAll(): Promise<Employee[]>;
+  findPage(page: number, pageSize: number): Promise<{ employees: Employee[]; total: number }>;
   findById(id: number): Promise<Employee | null>;
   findByEmail(email: string): Promise<Employee | null>;
   create(dto: CreateEmployeeDto): Promise<Employee>;
@@ -13,8 +13,13 @@ export interface IEmployeeRepository {
 export class EmployeeRepository implements IEmployeeRepository {
   constructor(private readonly knex: Knex) {}
 
-  findAll(): Promise<Employee[]> {
-    return this.knex('employees').select('*');
+  async findPage(page: number, pageSize: number): Promise<{ employees: Employee[]; total: number }> {
+    const offset = (page - 1) * pageSize;
+    const [countRow, employees] = await Promise.all([
+      this.knex('employees').count('* as count').first<{ count: number | string }>(),
+      this.knex('employees').select('*').limit(pageSize).offset(offset),
+    ]);
+    return { employees, total: Number(countRow?.count ?? 0) };
   }
 
   async findById(id: number): Promise<Employee | null> {

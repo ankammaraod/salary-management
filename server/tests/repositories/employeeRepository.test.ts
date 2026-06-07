@@ -34,15 +34,29 @@ afterEach(async () => {
   await db.destroy();
 });
 
-describe('findAll', () => {
-  it('returns empty array when no employees', async () => {
-    expect(await repo.findAll()).toEqual([]);
+describe('findPage', () => {
+  it('returns empty employees and total 0 when table is empty', async () => {
+    const result = await repo.findPage(1, 20);
+    expect(result.total).toBe(0);
+    expect(result.employees).toHaveLength(0);
   });
 
-  it('returns all inserted employees', async () => {
+  it('returns first page of employees and correct total', async () => {
     await repo.create(VALID_DTO);
     await repo.create({ ...VALID_DTO, email: 'bob@example.com', name: 'Bob' });
-    expect(await repo.findAll()).toHaveLength(2);
+    await repo.create({ ...VALID_DTO, email: 'carol@example.com', name: 'Carol' });
+    const result = await repo.findPage(1, 2);
+    expect(result.total).toBe(3);
+    expect(result.employees).toHaveLength(2);
+  });
+
+  it('returns second page of employees', async () => {
+    await repo.create(VALID_DTO);
+    await repo.create({ ...VALID_DTO, email: 'bob@example.com', name: 'Bob' });
+    await repo.create({ ...VALID_DTO, email: 'carol@example.com', name: 'Carol' });
+    const result = await repo.findPage(2, 2);
+    expect(result.total).toBe(3);
+    expect(result.employees).toHaveLength(1);
   });
 });
 
