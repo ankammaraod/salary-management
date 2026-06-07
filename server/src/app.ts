@@ -10,8 +10,6 @@ import { EmployeeService } from './services/employeeService';
 import { InsightsRepository } from './repositories/insightsRepository';
 import { InsightsService } from './services/insightsService';
 import { UploadService } from './services/uploadService';
-import { errorHandler } from './middleware/errorHandler';
-import { notFound } from './middleware/notFound';
 
 export function createApp(): Express {
   const app = express();
@@ -29,9 +27,6 @@ export function createApp(): Express {
   app.use('/api/employees', createEmployeeRouter(employeeService));
   app.use('/api/insights', createInsightsRouter(insightsService));
   app.use('/api/upload', createUploadRouter(uploadService));
-
-  app.use(notFound);
-  app.use(errorHandler);
 
   return app;
 }
