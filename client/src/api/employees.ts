@@ -7,8 +7,10 @@ async function parseError(res: Response): Promise<never> {
   throw new Error((data as { error?: string }).error ?? `request failed with status ${res.status}`);
 }
 
-export async function fetchEmployees(page: number, pageSize = 20): Promise<{ employees: Employee[]; total: number }> {
-  const res = await fetch(`${BASE}?page=${page}&pageSize=${pageSize}`);
+export async function fetchEmployees(page: number, pageSize = 20, search = ''): Promise<{ employees: Employee[]; total: number }> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (search) params.append('search', search);
+  const res = await fetch(`${BASE}?${params}`);
   if (!res.ok) await parseError(res);
   return res.json();
 }
