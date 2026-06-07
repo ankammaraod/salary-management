@@ -21,3 +21,5 @@ Thumbs.db
 # editor
 .vscode/
 .idea/
+.playwright-mcp/
+.superpowers/
