@@ -1,18 +1,10 @@
 import type { IEmployeeRepository } from '../repositories/employeeRepository';
 import type { Employee, CreateEmployeeDto } from '../types/employee';
 import { ValidationError, NotFoundError, ConflictError } from '../middleware/errors';
+import { validateEmployeeFields } from '../utils/validateEmployee';
 
 function validate(dto: CreateEmployeeDto): string | null {
-  if (!dto.name?.trim())                                return 'name is required';
-  if (!dto.email?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) return 'email is invalid';
-  if (!['Male', 'Female', 'Other'].includes(dto.gender)) return 'invalid gender';
-  if (!dto.role?.trim())                                return 'role is required';
-  if (!dto.department?.trim())                          return 'department is required';
-  if (!dto.country?.trim())                             return 'country is required';
-  if (!dto.salary || dto.salary <= 0)                   return 'salary must be positive';
-  if (!['Full-time', 'Contractor'].includes(dto.employment_type)) return 'invalid employment type';
-  if (!dto.joining_date?.match(/^\d{4}-\d{2}-\d{2}$/)) return 'joining_date must be YYYY-MM-DD';
-  return null;
+  return validateEmployeeFields(dto, 0)[0]?.message ?? null;
 }
 
 export class EmployeeService {
