@@ -146,6 +146,32 @@ Controller methods are regular `async` methods. Routes call them explicitly as m
 
 Search queries match against: `id`, `name`, `email`, `role`, `department`, `country`. Salary is explicitly excluded. The repository is the single place this logic lives.
 
+### Insights API
+
+Two endpoints served by the insights layer:
+
+| Endpoint | Response |
+|---|---|
+| `GET /api/insights/countries` | `string[]` — distinct countries with employees, sorted A-Z |
+| `GET /api/insights?country=X` | `InsightsDto` — full salary insights for that country |
+
+`InsightsDto` shape:
+
+```typescript
+{
+  headcount: number;
+  genderBreakdown: { Male: number; Female: number; Other: number };
+  employmentTypeBreakdown: { 'Full-time': number; Contractor: number };
+  avgSalary: number;
+  minSalary: number;
+  maxSalary: number;
+  totalPayroll: number;
+  departmentBreakdown: { department: string; headcount: number; avgSalary: number }[];
+}
+```
+
+`InsightsRepository` runs four queries in parallel via `Promise.all` — gender counts, employment type counts, salary aggregates (avg/min/max/sum), and department breakdown sorted by headcount descending. Salary values are `Math.round`-ed at the repository level. `InsightsService` validates that `country` is non-empty before delegating.
+
 ---
 
 ## 4. Frontend Architecture
@@ -240,10 +266,10 @@ Each layer tests exactly one thing. When a test fails, you know which layer brok
 
 | Layer | Examples |
 |---|---|
-| Controller | `list`, `get`, `create`, `update`, `remove` |
-| Repository | `findPage`, `findById`, `findByEmail`, `create`, `update`, `deleteById` |
-| Service | `listEmployees`, `getEmployee`, `createEmployee`, `updateEmployee`, `deleteEmployee` |
-| React hooks | `useEmployees`, `useEmployee`, `useInsights`, `useCreateEmployee`, `useDeleteEmployee` |
+| Controller | `list`, `get`, `create`, `update`, `remove`, `listCountries`, `getInsights` |
+| Repository | `findPage`, `findById`, `findByEmail`, `create`, `update`, `deleteById`, `listCountries`, `getInsights` |
+| Service | `listEmployees`, `getEmployee`, `createEmployee`, `updateEmployee`, `deleteEmployee`, `listCountries`, `getInsights` |
+| React hooks | `useEmployees`, `useEmployee`, `useCountries`, `useInsights`, `useCreateEmployee`, `useDeleteEmployee` |
 
 ### General rules
 

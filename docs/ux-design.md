@@ -72,8 +72,9 @@ Use Ant Design's default font stack. Do not introduce custom fonts.
 - Background: `#fff`, `border-bottom: 1px solid #e8e8e8`
 - Left: product name "ACME Salary Management" (bold, 16px)
 - Nav links: right-aligned horizontal AntD `Menu`
-  - Currently: **Employees** (active — highlighted in `colorPrimary`)
-  - Add **Insights** and **Upload** when those features are built
+  - **Employees** — highlights in `colorPrimary` when on `/employees`
+  - **Insights** — highlights in `colorPrimary` when on `/insights`
+  - Add **Upload** when that feature is built
 - Height: 56px
 
 ### Content area
@@ -214,6 +215,41 @@ Use AntD `Tag` component for inline status chips:
 
 If the delete API call fails (network error, 500, etc.), the confirm dialog closes and AntD `message.error(errorMessage)` is shown. The error message comes from the server response if available, otherwise falls back to `'Failed to delete employee'`. The employee list is not refreshed — the row remains visible.
 
+### 5.8 Insights Page
+
+`InsightsPage` uses the standard content card layout: white card, `max-width: 900px`, centered, `border-radius: 10px`, `box-shadow: 0 2px 8px rgba(0,0,0,0.06)`, `border: 1px solid #e8e8e8`.
+
+**Page header:** "Salary Insights" title (H1) inline with an AntD `Select` (width 240px, placeholder "Select a country"). Country list populated from `GET /api/insights/countries` — only countries with at least one employee.
+
+**Before country selection:** centered empty state text "Select a country to view salary insights" in `colorTextSecondary`, padding `60px 0`.
+
+**After country selection — three sections stacked inside the card with `gap: 24px`:**
+
+**1. Stat cards row** — five equal-width AntD `Card` + `Statistic` components in a `flex` row with `gap: 16px`:
+
+| Card | Value formatting |
+|---|---|
+| Headcount | `toLocaleString()` |
+| Avg Salary | `getCurrencySymbol(country) + value.toLocaleString()` |
+| Min Salary | same |
+| Max Salary | same |
+| Total Payroll | abbreviated: `≥1B → X.XB`, `≥1M → X.XM`, else `toLocaleString()` — prevents overflow on large orgs |
+
+**2. Pie charts row** — two equal-width AntD `Card` components side by side, each containing a recharts `PieChart` (width 320px, height 220px, `outerRadius: 80`):
+
+| Chart | Slices | Colors |
+|---|---|---|
+| Gender Breakdown | Male, Female, Other | `#1677ff`, `#722ed1`, `#888888` |
+| Employment Type | Full-time, Contractor | `#52c41a`, `#fa8c16` |
+
+Each chart includes a recharts `Tooltip` and `Legend` below the pie.
+
+**3. Department Breakdown** — AntD `Card` with title "Department Breakdown" containing an AntD `Table` (`pagination={false}`, `size="small"`). Columns: Department (text), Headcount (`toLocaleString()`), Avg Salary (currency symbol + `toLocaleString()`). Rows sorted by headcount descending (handled server-side).
+
+**Loading state:** AntD `Spin` size `large`, centered, padding `60px 0` — shown while `useInsights` is fetching.
+
+**Error state:** AntD `Alert` type `error`, message "Failed to load insights".
+
 ---
 
 ## 6. Routing
@@ -221,6 +257,7 @@ If the delete API call fails (network error, 500, etc.), the confirm dialog clos
 | Path | Component | Notes |
 |---|---|---|
 | `/employees` | `EmployeesPage` | Table + modal for all CRUD operations |
+| `/insights` | `InsightsPage` | Country selector + salary insights dashboard |
 
 The root `/` redirects to `/employees`.
 
