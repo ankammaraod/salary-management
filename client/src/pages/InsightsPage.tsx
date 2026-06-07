@@ -30,6 +30,12 @@ export default function InsightsPage() {
     return `${symbol}${value.toLocaleString()}`;
   }
 
+  function formatPayroll(value: number) {
+    if (value >= 1_000_000_000) return `${symbol}${(value / 1_000_000_000).toFixed(1)}B`;
+    if (value >= 1_000_000) return `${symbol}${(value / 1_000_000).toFixed(1)}M`;
+    return `${symbol}${value.toLocaleString()}`;
+  }
+
   const deptColumns: ColumnsType<DepartmentStat> = [
     { title: 'Department', dataIndex: 'department', key: 'department' },
     {
@@ -100,7 +106,7 @@ export default function InsightsPage() {
                 <Statistic title="Max Salary" value={formatSalary(insights.maxSalary)} />
               </Card>
               <Card style={{ flex: 1 }}>
-                <Statistic title="Total Payroll" value={formatSalary(insights.totalPayroll)} />
+                <Statistic title="Total Payroll" value={formatPayroll(insights.totalPayroll)} />
               </Card>
             </div>
 
