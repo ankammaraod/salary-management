@@ -116,3 +116,28 @@ describe('deleteById', () => {
     expect(await repo.findById(created.id)).toBeNull();
   });
 });
+
+describe('findPage with search', () => {
+  it('returns all employees when search is empty', async () => {
+    await repo.create(VALID_DTO);
+    await repo.create({ ...VALID_DTO, email: 'bob@example.com', name: 'Bob Smith' });
+    const result = await repo.findPage(1, 20, '');
+    expect(result.total).toBe(2);
+    expect(result.employees).toHaveLength(2);
+  });
+
+  it('returns filtered employees and filtered total when search matches', async () => {
+    await repo.create(VALID_DTO); // Alice Johnson
+    await repo.create({ ...VALID_DTO, email: 'bob@example.com', name: 'Bob Smith' });
+    const result = await repo.findPage(1, 20, 'Alice');
+    expect(result.total).toBe(1);
+    expect(result.employees[0].name).toBe('Alice Johnson');
+  });
+
+  it('returns empty employees and total 0 when search has no matches', async () => {
+    await repo.create(VALID_DTO);
+    const result = await repo.findPage(1, 20, 'zzznomatch');
+    expect(result.total).toBe(0);
+    expect(result.employees).toHaveLength(0);
+  });
+});
