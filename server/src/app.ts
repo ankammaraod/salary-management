@@ -13,7 +13,7 @@ import { UploadService } from './services/uploadService';
 
 export function createApp(): Express {
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: '10mb' }));
 
   const env = process.env.NODE_ENV ?? 'development';
   const db = knex(knexConfig[env]);
