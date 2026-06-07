@@ -2,7 +2,7 @@
 
 Web tool for an HR Manager to manage employees and view salary insights for a 10,000-employee organisation. Salary is stored in the employee's local currency (derived from country) — no FX conversion.
 
-**Live:** https://your-deployment-url-here
+**Live:** https://salary-management-kv45.onrender.com/
 
 ## Stack
 
