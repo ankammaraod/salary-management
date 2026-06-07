@@ -31,47 +31,56 @@ export class UploadService {
   constructor(private readonly repo: IUploadRepository) {}
 
   async bulkUpload(rows: CreateEmployeeDto[]): Promise<{ inserted: number }> {
-    if (rows.length > MAX_ROWS) {
-      throw new BulkValidationError([{ index: -1, field: 'file', message: `exceeds maximum of ${MAX_ROWS} rows` }]);
-    }
+    this.assertRowLimit(rows);
 
-    const errors: RowError[] = [];
-    for (let i = 0; i < rows.length; i++) {
-      errors.push(...validateRow(rows[i], i));
-    }
+    const fieldErrors = this.collectFieldErrors(rows);
+    const duplicateErrors = this.findDuplicateEmailErrors(rows, fieldErrors);
+    const localErrors = [...fieldErrors, ...duplicateErrors];
+    if (localErrors.length > 0) throw new BulkValidationError(localErrors);
 
-    const emailIndexMap = new Map<string, number[]>();
-    for (let i = 0; i < rows.length; i++) {
-      const email = (rows[i].email ?? '').toLowerCase();
-      if (!emailIndexMap.has(email)) emailIndexMap.set(email, []);
-      emailIndexMap.get(email)!.push(i);
-    }
-    for (const [, indices] of emailIndexMap) {
-      if (indices.length > 1) {
-        for (const idx of indices) {
-          if (!errors.some(e => e.index === idx && e.field === 'email')) {
-            errors.push({ index: idx, field: 'email', message: 'duplicate email in file' });
-          }
-        }
-      }
-    }
-
-    if (errors.length > 0) throw new BulkValidationError(errors);
-
-    const emails = rows.map(r => r.email);
-    const existing = await this.repo.findExistingEmails(emails);
-    if (existing.length > 0) {
-      const dbErrors = rows
-        .map((r, i) =>
-          existing.includes(r.email)
-            ? ({ index: i, field: 'email', message: 'email already exists' } as RowError)
-            : null,
-        )
-        .filter((e): e is RowError => e !== null);
-      throw new BulkValidationError(dbErrors);
-    }
+    const dbErrors = await this.findDbConflictErrors(rows);
+    if (dbErrors.length > 0) throw new BulkValidationError(dbErrors);
 
     await this.repo.insertMany(rows);
     return { inserted: rows.length };
+  }
+
+  private assertRowLimit(rows: CreateEmployeeDto[]): void {
+    if (rows.length > MAX_ROWS) {
+      throw new BulkValidationError([{ index: -1, field: 'file', message: `exceeds maximum of ${MAX_ROWS} rows` }]);
+    }
+  }
+
+  private collectFieldErrors(rows: CreateEmployeeDto[]): RowError[] {
+    return rows.flatMap((row, i) => validateRow(row, i));
+  }
+
+  private findDuplicateEmailErrors(rows: CreateEmployeeDto[], alreadyFlagged: RowError[]): RowError[] {
+    const emailToIndices = new Map<string, number[]>();
+    rows.forEach((row, i) => {
+      const email = (row.email ?? '').toLowerCase();
+      const indices = emailToIndices.get(email) ?? [];
+      indices.push(i);
+      emailToIndices.set(email, indices);
+    });
+
+    const flaggedEmailRows = new Set(alreadyFlagged.filter(e => e.field === 'email').map(e => e.index));
+
+    return [...emailToIndices.values()]
+      .filter(indices => indices.length > 1)
+      .flatMap(indices =>
+        indices
+          .filter(i => !flaggedEmailRows.has(i))
+          .map(i => ({ index: i, field: 'email', message: 'duplicate email in file' })),
+      );
+  }
+
+  private async findDbConflictErrors(rows: CreateEmployeeDto[]): Promise<RowError[]> {
+    const existing = await this.repo.findExistingEmails(rows.map(r => r.email));
+    if (existing.length === 0) return [];
+    const existingSet = new Set(existing);
+    return rows.flatMap((r, i) =>
+      existingSet.has(r.email) ? [{ index: i, field: 'email', message: 'email already exists' }] : [],
+    );
   }
 }
