@@ -90,11 +90,12 @@ A dedicated page with a country selector (defaults to "Select a country"). Once 
 
 ### Feature 7 — Bulk CSV Upload
 
-HR Manager uploads a CSV file matching a downloadable template. The system:
-1. Validates each row (required fields, valid country, valid employment type)
-2. Shows a pre-import summary: rows to be imported, rows with errors, error details
-3. On confirm, inserts valid rows; skips errored rows
-4. Provides a downloadable error report for failed rows
+HR Manager uploads a CSV file. The system:
+1. Parses and validates every row client-side (required fields, valid enums, date format, no duplicate emails within the file)
+2. Shows a pre-import summary: total rows, valid count, invalid count, and a per-row error table
+3. The import is all-or-nothing — if any row has an error the entire upload is rejected; the HR Manager must fix the file and re-upload
+4. On confirm (all rows valid), POSTs the parsed rows as JSON to the server; server re-validates and checks for emails that already exist in the database
+5. On success, shows a banner with the imported count and a link to the Employees list
 
 ---
 
