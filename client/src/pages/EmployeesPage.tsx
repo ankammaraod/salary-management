@@ -99,6 +99,7 @@ export default function EmployeesPage() {
     {
       title: '',
       key: 'actions',
+      width: 52,
       render: (_: unknown, record: Employee) => {
         const items: MenuProps['items'] = [
           { key: 'view', label: 'View', onClick: () => openModal('view', record.id) },

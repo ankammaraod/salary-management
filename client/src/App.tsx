@@ -6,7 +6,7 @@ import InsightsPage from './pages/InsightsPage';
 
 export default function App() {
   return (
-    <ConfigProvider theme={{ token: { colorPrimary: '#1677ff' } }}>
+    <ConfigProvider theme={{ token: { colorPrimary: '#1677ff' }, components: { Table: { cellPaddingBlockSM: 4, cellPaddingInlineSM: 8 } } }}>
       <BrowserRouter>
         <AppLayout>
           <Routes>
