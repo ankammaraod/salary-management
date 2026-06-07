@@ -5,9 +5,13 @@ import { ValidationError } from '../middleware/errors';
 export function createEmployeeRouter(service: EmployeeService): Router {
   const router = Router();
 
-  router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
+  router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    const page = Number(req.query.page ?? 1);
+    const pageSize = Number(req.query.pageSize ?? 20);
+    if (!Number.isInteger(page) || page < 1) return next(new ValidationError('page must be a positive integer'));
+    if (!Number.isInteger(pageSize) || pageSize < 1) return next(new ValidationError('pageSize must be a positive integer'));
     try {
-      res.json(await service.listEmployees());
+      res.json(await service.listEmployees(page, pageSize));
     } catch (err) { next(err); }
   });
 

@@ -20,7 +20,7 @@ const VALID_BODY = {
 
 function makeService(overrides: Partial<EmployeeService> = {}): EmployeeService {
   return {
-    listEmployees: jest.fn().mockResolvedValue([ALICE]),
+    listEmployees: jest.fn().mockResolvedValue({ employees: [ALICE], total: 1 }),
     getEmployee: jest.fn().mockResolvedValue(ALICE),
     createEmployee: jest.fn().mockResolvedValue(ALICE),
     updateEmployee: jest.fn().mockResolvedValue({ ...ALICE, salary: 95000 }),
@@ -38,11 +38,36 @@ function makeApp(service: EmployeeService) {
 }
 
 describe('GET /api/employees', () => {
-  it('returns 200 with employee array', async () => {
-    const res = await request(makeApp(makeService())).get('/api/employees');
+  it('returns 200 with paginated envelope', async () => {
+    const res = await request(makeApp(makeService())).get('/api/employees?page=1&pageSize=20');
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(1);
-    expect(res.body[0].name).toBe('Alice Johnson');
+    expect(res.body.employees).toHaveLength(1);
+    expect(res.body.employees[0].name).toBe('Alice Johnson');
+    expect(res.body.total).toBe(1);
+  });
+
+  it('defaults page to 1 and pageSize to 20 when params are absent', async () => {
+    const service = makeService();
+    await request(makeApp(service)).get('/api/employees');
+    expect(service.listEmployees).toHaveBeenCalledWith(1, 20);
+  });
+
+  it('returns 400 when page is not a number', async () => {
+    const res = await request(makeApp(makeService())).get('/api/employees?page=abc');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('page must be a positive integer');
+  });
+
+  it('returns 400 when page is 0', async () => {
+    const res = await request(makeApp(makeService())).get('/api/employees?page=0');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('page must be a positive integer');
+  });
+
+  it('returns 400 when pageSize is not a number', async () => {
+    const res = await request(makeApp(makeService())).get('/api/employees?pageSize=abc');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('pageSize must be a positive integer');
   });
 });
 
