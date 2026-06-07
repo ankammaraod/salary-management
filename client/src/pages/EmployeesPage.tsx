@@ -13,8 +13,10 @@ type ModalState =
   | { open: true; mode: 'view' | 'edit' | 'create'; employeeId: number | null };
 
 export default function EmployeesPage() {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [modalState, setModalState] = useState<ModalState>({ open: false });
-  const { data: employees = [], isLoading, isError } = useEmployees();
+  const { data, isLoading, isError } = useEmployees(page, pageSize);
   const deleteMutation = useDeleteEmployee();
 
   function openModal(mode: 'view' | 'edit' | 'create', employeeId: number | null) {
@@ -45,8 +47,6 @@ export default function EmployeesPage() {
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id' },
     { title: 'Name', dataIndex: 'name', key: 'name' },
-    { title: 'Role', dataIndex: 'role', key: 'role' },
-    { title: 'Department', dataIndex: 'department', key: 'department' },
     { title: 'Country', dataIndex: 'country', key: 'country' },
     {
       title: 'Salary',
@@ -86,6 +86,9 @@ export default function EmployeesPage() {
     },
   ];
 
+  const employees = data?.employees ?? [];
+  const total = data?.total ?? 0;
+
   const modalTitle = modalState.open
     ? modalState.mode === 'create'
       ? 'New Employee'
@@ -115,7 +118,17 @@ export default function EmployeesPage() {
           columns={columns}
           rowKey="id"
           loading={isLoading}
-          pagination={{ pageSize: 20, showSizeChanger: false }}
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            onChange: (newPage, newPageSize) => {
+              setPage(newPage);
+              setPageSize(newPageSize);
+            },
+            showSizeChanger: true,
+            pageSizeOptions: [20, 50, 100],
+          }}
         />
       </div>
       <Modal

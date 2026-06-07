@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Modal, message } from 'antd';
 import EmployeesPage from '../EmployeesPage';
@@ -26,7 +26,7 @@ const EMPLOYEES = [
 ];
 
 beforeEach(() => {
-  vi.mocked(useEmployees).mockReturnValue({ data: EMPLOYEES, isLoading: false, isError: false } as any);
+  vi.mocked(useEmployees).mockReturnValue({ data: { employees: EMPLOYEES, total: 2 }, isLoading: false, isError: false } as any);
   vi.mocked(useDeleteEmployee).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as any);
 });
 
