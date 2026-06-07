@@ -148,4 +148,11 @@ describe('findPage with search', () => {
     expect(result.total).toBe(1);
     expect(result.employees[0].country).toBe('Germany');
   });
+
+  it('does not search salary — returns 0 when searching by salary value', async () => {
+    await repo.create(VALID_DTO); // salary: 87400
+    const result = await repo.findPage(1, 20, '87400');
+    expect(result.total).toBe(0);
+    expect(result.employees).toHaveLength(0);
+  });
 });

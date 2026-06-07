@@ -18,14 +18,15 @@ export class EmployeeRepository implements IEmployeeRepository {
 
     const withSearch = (qb: Knex.QueryBuilder): Knex.QueryBuilder => {
       if (!search) return qb;
-      const term = `%${search}%`;
+      const escaped = search.replace(/%/g, '\\%').replace(/_/g, '\\_');
+      const term = `%${escaped}%`;
       return qb.where(function () {
-        this.whereRaw('CAST(id AS TEXT) LIKE ?', [term])
-          .orWhere('name', 'like', term)
-          .orWhere('email', 'like', term)
-          .orWhere('role', 'like', term)
-          .orWhere('department', 'like', term)
-          .orWhere('country', 'like', term);
+        this.whereRaw("CAST(id AS TEXT) LIKE ? ESCAPE '\\'", [term])
+          .orWhereRaw("name LIKE ? ESCAPE '\\'", [term])
+          .orWhereRaw("email LIKE ? ESCAPE '\\'", [term])
+          .orWhereRaw("role LIKE ? ESCAPE '\\'", [term])
+          .orWhereRaw("department LIKE ? ESCAPE '\\'", [term])
+          .orWhereRaw("country LIKE ? ESCAPE '\\'", [term]);
       });
     };
 
