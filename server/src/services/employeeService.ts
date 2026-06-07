@@ -18,8 +18,8 @@ function validate(dto: CreateEmployeeDto): string | null {
 export class EmployeeService {
   constructor(private readonly repo: IEmployeeRepository) {}
 
-  listEmployees(): Promise<Employee[]> {
-    return this.repo.findAll();
+  listEmployees(page: number, pageSize: number): Promise<{ employees: Employee[]; total: number }> {
+    return this.repo.findPage(page, pageSize);
   }
 
   async getEmployee(id: number): Promise<Employee> {

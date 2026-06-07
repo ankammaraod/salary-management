@@ -18,7 +18,7 @@ const ALICE: Employee = { id: 1, ...VALID_DTO };
 
 function makeRepo(overrides: Partial<IEmployeeRepository> = {}): IEmployeeRepository {
   return {
-    findAll: jest.fn().mockResolvedValue([]),
+    findPage: jest.fn().mockResolvedValue({ employees: [], total: 0 }),
     findById: jest.fn().mockResolvedValue(null),
     findByEmail: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue(ALICE),
@@ -29,11 +29,13 @@ function makeRepo(overrides: Partial<IEmployeeRepository> = {}): IEmployeeReposi
 }
 
 describe('listEmployees', () => {
-  it('returns all employees', async () => {
-    const service = new EmployeeService(makeRepo({ findAll: jest.fn().mockResolvedValue([ALICE]) }));
-    const result = await service.listEmployees();
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Alice Johnson');
+  it('delegates page and pageSize to repo.findPage and returns the result', async () => {
+    const pageResult = { employees: [ALICE], total: 1 };
+    const repo = makeRepo({ findPage: jest.fn().mockResolvedValue(pageResult) });
+    const service = new EmployeeService(repo);
+    const result = await service.listEmployees(1, 20);
+    expect(repo.findPage).toHaveBeenCalledWith(1, 20);
+    expect(result).toEqual(pageResult);
   });
 });
 
