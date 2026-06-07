@@ -20,6 +20,8 @@ WORKDIR /app
 COPY --from=server-builder /app/server/dist ./dist
 COPY --from=server-builder /app/server/node_modules ./node_modules
 COPY --from=client-builder /app/client/dist ./public
+COPY start.sh ./start.sh
+RUN chmod +x start.sh
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node", "dist/server.js"]
+CMD ["sh", "start.sh"]
