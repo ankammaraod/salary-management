@@ -15,10 +15,10 @@ export class EmployeeRepository implements IEmployeeRepository {
 
   async findPage(page: number, pageSize: number, search = ''): Promise<{ employees: Employee[]; total: number }> {
     const offset = (page - 1) * pageSize;
-    const term = `%${search}%`;
 
     const withSearch = (qb: Knex.QueryBuilder): Knex.QueryBuilder => {
       if (!search) return qb;
+      const term = `%${search}%`;
       return qb.where(function () {
         this.whereRaw('CAST(id AS TEXT) LIKE ?', [term])
           .orWhere('name', 'like', term)

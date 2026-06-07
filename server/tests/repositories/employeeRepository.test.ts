@@ -140,4 +140,12 @@ describe('findPage with search', () => {
     expect(result.total).toBe(0);
     expect(result.employees).toHaveLength(0);
   });
+
+  it('returns filtered employees when search matches country', async () => {
+    await repo.create(VALID_DTO); // country: 'Germany'
+    await repo.create({ ...VALID_DTO, email: 'bob@example.com', name: 'Bob Smith', country: 'France' });
+    const result = await repo.findPage(1, 20, 'Germany');
+    expect(result.total).toBe(1);
+    expect(result.employees[0].country).toBe('Germany');
+  });
 });
