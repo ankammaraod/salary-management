@@ -20,7 +20,8 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState('');
   const [modalState, setModalState] = useState<ModalState>({ open: false });
   const [importOpen, setImportOpen] = useState(false);
-  const { data, isLoading, isError } = useEmployees(page, pageSize, search);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const { data, isLoading, isError } = useEmployees(page, pageSize, search, sortOrder);
   const deleteMutation = useDeleteEmployee();
 
   function handleSearch(value: string) {

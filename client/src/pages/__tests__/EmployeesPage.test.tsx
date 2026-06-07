@@ -115,7 +115,7 @@ describe('EmployeesPage', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
     fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 });
     await waitFor(() => {
-      expect(vi.mocked(useEmployees)).toHaveBeenCalledWith(1, 20, 'Alice');
+      expect(vi.mocked(useEmployees)).toHaveBeenCalledWith(1, 20, 'Alice', 'desc');
     });
   });
 });
