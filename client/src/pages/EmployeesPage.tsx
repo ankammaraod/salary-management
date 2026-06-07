@@ -74,16 +74,18 @@ export default function EmployeesPage() {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
+      width: 80,
       sorter: true,
       sortOrder: (sortOrder === 'asc' ? 'ascend' : 'descend') as 'ascend' | 'descend',
       sortDirections: ['descend' as const, 'ascend' as const],
     },
     { title: 'Name', dataIndex: 'name', key: 'name' },
-    { title: 'Country', dataIndex: 'country', key: 'country' },
+    { title: 'Country', dataIndex: 'country', key: 'country', width: 150 },
     {
       title: 'Salary',
       dataIndex: 'salary',
       key: 'salary',
+      width: 140,
       align: 'right' as const,
       render: (salary: number, record: Employee) =>
         `${getCurrencySymbol(record.country)}${salary.toLocaleString()}`,
@@ -92,6 +94,7 @@ export default function EmployeesPage() {
       title: 'Employment Type',
       dataIndex: 'employment_type',
       key: 'employment_type',
+      width: 155,
       render: (type: string) => (
         <Tag color={type === 'Full-time' ? 'green' : 'orange'}>{type}</Tag>
       ),
@@ -111,7 +114,7 @@ export default function EmployeesPage() {
           },
         ];
         return (
-          <Dropdown menu={{ items }} trigger={['click']}>
+          <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
             <Button type="text" icon={<MoreOutlined />} aria-label="actions" />
           </Dropdown>
         );
