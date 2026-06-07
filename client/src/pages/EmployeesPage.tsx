@@ -5,6 +5,7 @@ import type { MenuProps } from 'antd';
 import { useEmployees } from '../hooks/useEmployees';
 import { useDeleteEmployee } from '../hooks/useDeleteEmployee';
 import EmployeeForm from '../components/EmployeeForm';
+import ImportCsvModal from '../components/ImportCsvModal';
 import type { Employee } from '../types/employee';
 import { getCurrencySymbol } from '../utils/currency';
 
@@ -18,6 +19,7 @@ export default function EmployeesPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [modalState, setModalState] = useState<ModalState>({ open: false });
+  const [importOpen, setImportOpen] = useState(false);
   const { data, isLoading, isError } = useEmployees(page, pageSize, search);
   const deleteMutation = useDeleteEmployee();
 
@@ -119,6 +121,7 @@ export default function EmployeesPage() {
           <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal('create', null)}>
             New Employee
           </Button>
+          <Button onClick={() => setImportOpen(true)}>Import CSV</Button>
         </div>
       </div>
       <div
@@ -147,6 +150,7 @@ export default function EmployeesPage() {
           }}
         />
       </div>
+      <ImportCsvModal open={importOpen} onClose={() => setImportOpen(false)} />
       <Modal
         open={modalState.open}
         title={modalTitle}

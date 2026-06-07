@@ -87,7 +87,8 @@ describe('ImportCsvModal', () => {
   it('shows row-error alert when validateCsvRows returns errors', () => {
     const errors = [{ index: 0, field: 'email', message: 'email is invalid' }];
     vi.mocked(validateCsvRows).mockReturnValue({ valid: [], errors });
-    vi.mocked(Papa.parse).mockImplementation((_file: unknown, opts: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+(Papa.parse as any).mockImplementation((_file: unknown, opts: any) => {
       opts.complete(VALID_PARSE_RESULT);
     });
     renderModal();
@@ -96,7 +97,8 @@ describe('ImportCsvModal', () => {
   });
 
   it('shows success alert with row count when all rows are valid', () => {
-    vi.mocked(Papa.parse).mockImplementation((_file: unknown, opts: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+(Papa.parse as any).mockImplementation((_file: unknown, opts: any) => {
       opts.complete(VALID_PARSE_RESULT);
     });
     renderModal();
@@ -105,7 +107,8 @@ describe('ImportCsvModal', () => {
   });
 
   it('shows file-error when CSV has missing columns', () => {
-    vi.mocked(Papa.parse).mockImplementation((_file: unknown, opts: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+(Papa.parse as any).mockImplementation((_file: unknown, opts: any) => {
       opts.complete({ data: [], meta: { fields: ['name', 'email'] }, errors: [] });
     });
     renderModal();
@@ -114,7 +117,8 @@ describe('ImportCsvModal', () => {
   });
 
   it('shows file-error when CSV has no data rows', () => {
-    vi.mocked(Papa.parse).mockImplementation((_file: unknown, opts: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+(Papa.parse as any).mockImplementation((_file: unknown, opts: any) => {
       opts.complete({ data: [], meta: { fields: ALL_FIELDS }, errors: [] });
     });
     renderModal();

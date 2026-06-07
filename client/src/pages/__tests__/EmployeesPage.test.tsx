@@ -8,6 +8,9 @@ vi.mock('../../hooks/useDeleteEmployee');
 vi.mock('../../components/EmployeeForm', () => ({
   default: ({ mode }: { mode: string }) => <div data-testid="employee-form">mode:{mode}</div>,
 }));
+vi.mock('../../components/ImportCsvModal', () => ({
+  default: () => <div data-testid="import-csv-modal" />,
+}));
 
 import { useEmployees } from '../../hooks/useEmployees';
 import { useDeleteEmployee } from '../../hooks/useDeleteEmployee';
