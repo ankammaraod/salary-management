@@ -98,4 +98,21 @@ describe('EmployeesPage', () => {
     render(<EmployeesPage />);
     expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
   });
+
+  it('renders a search input with the correct placeholder', () => {
+    render(<EmployeesPage />);
+    expect(
+      screen.getByPlaceholderText('Search by name, email, role, department, country, or ID')
+    ).toBeInTheDocument();
+  });
+
+  it('calls useEmployees with submitted search term when Enter is pressed', async () => {
+    render(<EmployeesPage />);
+    const input = screen.getByPlaceholderText('Search by name, email, role, department, country, or ID');
+    fireEvent.change(input, { target: { value: 'Alice' } });
+    fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 });
+    await waitFor(() => {
+      expect(vi.mocked(useEmployees)).toHaveBeenCalledWith(1, 20, 'Alice');
+    });
+  });
 });

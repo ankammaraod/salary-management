@@ -92,8 +92,9 @@ Use Ant Design's default font stack. Do not introduce custom fonts.
 
 **Page header row** (above the table card):
 - Left: "Employees" — 20px, weight 700
-- Right: "New Employee" — AntD `Button` type `primary`
+- Right (left to right): AntD `Input.Search` (width 320px, placeholder: `Search by name, email, role, department, country, or ID`) then "New Employee" AntD `Button` type `primary`
 - `margin-bottom: 16px`
+- Search fires on Enter or search icon click; resets pagination to page 1
 
 **Table card**: white, `border-radius: 10px`, `box-shadow: 0 2px 8px rgba(0,0,0,0.06)`, `border: 1px solid #e8e8e8`
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Table, Button, Dropdown, Tag, Modal, message, Alert } from 'antd';
+import { Table, Button, Dropdown, Tag, Modal, message, Alert, Input } from 'antd';
 import { MoreOutlined, PlusOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { useEmployees } from '../hooks/useEmployees';
@@ -15,9 +15,16 @@ type ModalState =
 export default function EmployeesPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
   const [modalState, setModalState] = useState<ModalState>({ open: false });
-  const { data, isLoading, isError } = useEmployees(page, pageSize);
+  const { data, isLoading, isError } = useEmployees(page, pageSize, search);
   const deleteMutation = useDeleteEmployee();
+
+  function handleSearch(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
 
   function openModal(mode: 'view' | 'edit' | 'create', employeeId: number | null) {
     setModalState({ open: true, mode, employeeId });
@@ -101,9 +108,18 @@ export default function EmployeesPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <span style={{ fontSize: 20, fontWeight: 700 }}>Employees</span>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal('create', null)}>
-          New Employee
-        </Button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Input.Search
+            placeholder="Search by name, email, role, department, country, or ID"
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            onSearch={handleSearch}
+            style={{ width: 320 }}
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal('create', null)}>
+            New Employee
+          </Button>
+        </div>
       </div>
       <div
         style={{
