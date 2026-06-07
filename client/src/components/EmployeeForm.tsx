@@ -6,6 +6,7 @@ import { useCreateEmployee } from '../hooks/useCreateEmployee';
 import { useUpdateEmployee } from '../hooks/useUpdateEmployee';
 import { useDeleteEmployee } from '../hooks/useDeleteEmployee';
 import type { CreateEmployeeDto } from '../types/employee';
+import { COUNTRIES } from '../utils/currency';
 
 type Mode = 'view' | 'edit' | 'create';
 
@@ -21,6 +22,7 @@ interface Props {
 
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'].map(g => ({ label: g, value: g }));
 const EMPLOYMENT_OPTIONS = ['Full-time', 'Contractor'].map(t => ({ label: t, value: t }));
+const COUNTRY_OPTIONS = COUNTRIES.map(c => ({ label: c, value: c }));
 
 const sectionHeader: React.CSSProperties = {
   fontSize: 12, fontWeight: 700, color: '#1677ff', textTransform: 'uppercase',
@@ -204,7 +206,7 @@ export default function EmployeeForm({ mode, employeeId, onCreated, onSaved, onD
               <Input placeholder="Business unit" />
             </Form.Item>
             <Form.Item name="country" label="Country" rules={[{ required: true, message: 'country is required' }]} style={{ marginBottom: 0 }}>
-              <Input placeholder="Country" />
+              <Select options={COUNTRY_OPTIONS} placeholder="Select country" />
             </Form.Item>
             <Form.Item name="employment_type" label="Employment Type" rules={[{ required: true, message: 'employment type is required' }]} style={{ marginBottom: 0 }}>
               <Select options={EMPLOYMENT_OPTIONS} placeholder="Select type" />

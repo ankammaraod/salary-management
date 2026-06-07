@@ -15,7 +15,7 @@ describe('getCurrencySymbol', () => {
     expect(getCurrencySymbol(country)).toBe(symbol);
   });
 
-  it('returns empty string for unknown country', () => {
-    expect(getCurrencySymbol('Unknown')).toBe('');
+  it('returns the country name as fallback for unknown country', () => {
+    expect(getCurrencySymbol('Unknown')).toBe('Unknown');
   });
 });

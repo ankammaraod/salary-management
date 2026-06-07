@@ -1,3 +1,7 @@
+export const COUNTRIES = [
+  'USA', 'United Kingdom', 'Germany', 'France', 'India', 'Japan', 'Brazil', 'Australia',
+] as const;
+
 const COUNTRY_CURRENCY: Record<string, string> = {
   'USA': '$',
   'United Kingdom': '£',
@@ -10,5 +14,5 @@ const COUNTRY_CURRENCY: Record<string, string> = {
 };
 
 export function getCurrencySymbol(country: string): string {
-  return COUNTRY_CURRENCY[country] ?? '';
+  return COUNTRY_CURRENCY[country] ?? country;
 }
