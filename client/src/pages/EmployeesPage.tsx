@@ -79,7 +79,7 @@ export default function EmployeesPage() {
       sortOrder: (sortOrder === 'asc' ? 'ascend' : 'descend') as 'ascend' | 'descend',
       sortDirections: ['descend' as const, 'ascend' as const],
     },
-    { title: 'Name', dataIndex: 'name', key: 'name' },
+    { title: 'Name', dataIndex: 'name', key: 'name', width: 200 },
     { title: 'Country', dataIndex: 'country', key: 'country', width: 150 },
     {
       title: 'Salary',
@@ -134,7 +134,7 @@ export default function EmployeesPage() {
   if (isError) return <Alert type="error" message="Failed to load employees" style={{ margin: 24 }} />;
 
   return (
-    <div>
+    <div style={{ maxWidth: 'min(900px, 80vw)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <span style={{ fontSize: 20, fontWeight: 700 }}>Employees</span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
