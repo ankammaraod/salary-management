@@ -125,7 +125,7 @@ server/
 |---|---|
 | Known errors (400/404/409) | Routes call `next(err)`; `errorHandler` returns `{ error: message }` with the correct status |
 | Unknown errors (500) | `errorHandler` returns `{ error: 'internal server error' }` and **logs the full `Error` object** (stack included) via `console.error(err)` |
-| Non-numeric `:id` params | Routes return 400 `{ error: 'id must be a number' }` before calling the service |
+| Non-numeric `:id` params | Controllers return 400 `{ error: 'id must be a number' }` before calling the service |
 | Repository post-write safety | `create` and `update` throw `Error` if `findById` returns null after the write, rather than silently returning a typed null |
 
 ### Four-layer architecture with dependency injection
@@ -136,7 +136,9 @@ Each layer has one responsibility. Dependencies flow inward — routes depend on
 Route → Controller → Service → Repository → SQLite
 ```
 
-Dependency injection is manual — no framework. Each layer receives its dependency as a constructor argument. In tests, a fake is injected at the seam being tested. TypeScript interfaces enforce that fakes cannot silently drift from the real implementation.
+Controllers, services, and repositories are all TypeScript classes. Dependency injection is manual — no framework. Each class receives its dependency via the constructor. In tests, a fake is injected at the seam being tested. TypeScript interfaces enforce that fakes cannot silently drift from the real implementation.
+
+Controller methods are arrow function class fields (`list = async (...) => { ... }`). This binds `this` at construction time so methods can be passed directly as Express callbacks without losing context.
 
 **`app.ts` vs `server.ts` split** — `app.ts` exports the Express app without calling `listen()`. Tests import `app.ts` directly — no port conflicts, no real server needed.
 
@@ -226,18 +228,27 @@ Each layer tests exactly one thing. When a test fails, you know which layer brok
 | React components | `PascalCase.tsx` | `ConfirmDeleteModal.tsx` |
 | React hooks | `use<What>.ts` | `useEmployees.ts` |
 
-### Function naming — verb-first, describes what it does
+### Class naming — PascalCase, one class per file
+
+| Layer | Class name | Example |
+|---|---|---|
+| Controllers | `<Resource>Controller` | `EmployeeController` |
+| Services | `<Resource>Service` | `EmployeeService` |
+| Repositories | `<Resource>Repository` | `EmployeeRepository` |
+
+### Method naming — verb-first, describes what it does
 
 | Layer | Examples |
 |---|---|
-| Repository | `findAll`, `findById`, `create`, `update`, `deleteById` |
-| Service | `listEmployees`, `getEmployee`, `createEmployee`, `updateEmployee`, `deleteEmployee`, `getInsightsByCountry` |
+| Controller | `list`, `get`, `create`, `update`, `remove` |
+| Repository | `findPage`, `findById`, `findByEmail`, `create`, `update`, `deleteById` |
+| Service | `listEmployees`, `getEmployee`, `createEmployee`, `updateEmployee`, `deleteEmployee` |
 | React hooks | `useEmployees`, `useEmployee`, `useInsights`, `useCreateEmployee`, `useDeleteEmployee` |
 
 ### General rules
 
 - **Variables** — full words, no abbreviations (`employeeList` not `empList`, `totalHeadcount` not `cnt`)
-- **TypeScript interfaces** — domain models use plain names (`Employee`), DI contracts use `I`-prefix (`IEmployeeRepository`, `IEmployeeService`), data transfer shapes use `Dto` suffix (`CreateEmployeeDto`)
+- **TypeScript interfaces** — domain models use plain names (`Employee`), DI contracts use `I`-prefix (`IEmployeeRepository`), data transfer shapes use `Dto` suffix (`CreateEmployeeDto`)
 - **Constants** — `SCREAMING_SNAKE_CASE` (`DEFAULT_PAGE_SIZE`, `EMPLOYMENT_TYPES`, `GENDER_OPTIONS`)
 - **Error messages** — lowercase, plain English, actionable (`'employee not found'`, `'email already exists'`)
 - **Comments** — only when the *why* is non-obvious. Never describe what the code does.
@@ -255,6 +266,6 @@ Each layer tests exactly one thing. When a test fails, you know which layer brok
 5. Service validates params and calls the repository
 6. Repository queries SQLite matching `id`, `name`, `email`, `role`, `department`, `country` against "Alice"
 7. Repository returns a typed employee list to the service
-8. Service returns the list with total count to the route
-9. Route responds with HTTP 200 and JSON payload
+8. Service returns the list with total count to the controller
+9. Controller responds with HTTP 200 and JSON payload
 10. React Query updates its cache and the employee table re-renders with results

@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import type { EmployeeService } from '../services/employeeService';
-import { createEmployeeController } from '../controllers/employeeController';
+import { EmployeeController } from '../controllers/employeeController';
 
 type AsyncHandler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 const wrap = (fn: AsyncHandler) => (req: Request, res: Response, next: NextFunction) =>
@@ -8,7 +8,7 @@ const wrap = (fn: AsyncHandler) => (req: Request, res: Response, next: NextFunct
 
 export function createEmployeeRouter(service: EmployeeService): Router {
   const router = Router();
-  const ctrl = createEmployeeController(service);
+  const ctrl = new EmployeeController(service);
 
   router.get('/', wrap(ctrl.list));
   router.get('/:id', wrap(ctrl.get));
