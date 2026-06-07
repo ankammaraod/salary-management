@@ -10,6 +10,12 @@ export interface IEmployeeRepository {
   deleteById(id: number): Promise<void>;
 }
 
+const SEARCHABLE_COLUMNS = ['CAST(id AS TEXT)', 'name', 'email', 'role', 'department', 'country'];
+
+function escapeLikeTerm(raw: string): string {
+  return `%${raw.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')}%`;
+}
+
 export class EmployeeRepository implements IEmployeeRepository {
   constructor(private readonly knex: Knex) {}
 
@@ -18,17 +24,13 @@ export class EmployeeRepository implements IEmployeeRepository {
 
     const withSearch = (qb: Knex.QueryBuilder): Knex.QueryBuilder => {
       if (!search) return qb;
-
-      const escaped = search.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
-      const term = `%${escaped}%`;
-
+      const term = escapeLikeTerm(search);
       return qb.where(function () {
-        this.whereRaw("CAST(id AS TEXT) LIKE ? ESCAPE '\\'", [term])
-          .orWhereRaw("name LIKE ? ESCAPE '\\'", [term])
-          .orWhereRaw("email LIKE ? ESCAPE '\\'", [term])
-          .orWhereRaw("role LIKE ? ESCAPE '\\'", [term])
-          .orWhereRaw("department LIKE ? ESCAPE '\\'", [term])
-          .orWhereRaw("country LIKE ? ESCAPE '\\'", [term]);
+        SEARCHABLE_COLUMNS.forEach((col, i) => {
+          const raw = `${col} LIKE ? ESCAPE '\\'`;
+          if (i === 0) this.whereRaw(raw, [term]);
+          else this.orWhereRaw(raw, [term]);
+        });
       });
     };
 
