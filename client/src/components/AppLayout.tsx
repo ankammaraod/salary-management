@@ -4,7 +4,10 @@ import type { ReactNode } from 'react';
 
 const { Header, Content } = Layout;
 
-const NAV_ITEMS = [{ key: '/employees', label: 'Employees' }];
+const NAV_ITEMS = [
+  { key: '/employees', label: 'Employees' },
+  { key: '/insights', label: 'Insights' },
+];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
