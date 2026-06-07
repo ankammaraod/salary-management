@@ -11,6 +11,9 @@ import PaginationBar from '../components/PaginationBar';
 import type { Employee } from '../types/employee';
 import { getCurrencySymbol } from '../utils/currency';
 
+// Height accounts for nav bar + search row + pagination bar
+const TABLE_SCROLL_Y = 'calc(100vh - 270px)';
+
 type ModalState =
   | { open: false }
   | { open: true; mode: 'view' | 'edit' | 'create'; employeeId: number | null };
@@ -159,7 +162,7 @@ export default function EmployeesPage() {
           size="small"
           loading={isLoading}
           pagination={false}
-          scroll={{ y: 'calc(100vh - 270px)' }}
+          scroll={{ y: TABLE_SCROLL_Y }}
           onChange={handleTableChange as any}
         />
         <PaginationBar
