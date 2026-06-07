@@ -3,13 +3,7 @@ import type { EmployeeService } from '../services/employeeService';
 import { ValidationError } from '../middleware/errors';
 
 export class EmployeeController {
-  constructor(private readonly service: EmployeeService) {
-    this.list = this.list.bind(this);
-    this.get = this.get.bind(this);
-    this.create = this.create.bind(this);
-    this.update = this.update.bind(this);
-    this.remove = this.remove.bind(this);
-  }
+  constructor(private readonly service: EmployeeService) {}
 
   async list(req: Request, res: Response, next: NextFunction): Promise<void> {
     const page = Number(req.query.page ?? 1);

@@ -10,11 +10,11 @@ export function createEmployeeRouter(service: EmployeeService): Router {
   const router = Router();
   const ctrl = new EmployeeController(service);
 
-  router.get('/', wrap(ctrl.list));
-  router.get('/:id', wrap(ctrl.get));
-  router.post('/', wrap(ctrl.create));
-  router.put('/:id', wrap(ctrl.update));
-  router.delete('/:id', wrap(ctrl.remove));
+  router.get('/', wrap((req, res, next) => ctrl.list(req, res, next)));
+  router.get('/:id', wrap((req, res, next) => ctrl.get(req, res, next)));
+  router.post('/', wrap((req, res) => ctrl.create(req, res)));
+  router.put('/:id', wrap((req, res, next) => ctrl.update(req, res, next)));
+  router.delete('/:id', wrap((req, res, next) => ctrl.remove(req, res, next)));
 
   return router;
 }
