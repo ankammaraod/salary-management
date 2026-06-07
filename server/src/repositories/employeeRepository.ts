@@ -18,7 +18,7 @@ export class EmployeeRepository implements IEmployeeRepository {
 
     const withSearch = (qb: Knex.QueryBuilder): Knex.QueryBuilder => {
       if (!search) return qb;
-      const escaped = search.replace(/%/g, '\\%').replace(/_/g, '\\_');
+      const escaped = search.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
       const term = `%${escaped}%`;
       return qb.where(function () {
         this.whereRaw("CAST(id AS TEXT) LIKE ? ESCAPE '\\'", [term])

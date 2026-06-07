@@ -155,4 +155,11 @@ describe('findPage with search', () => {
     expect(result.total).toBe(0);
     expect(result.employees).toHaveLength(0);
   });
+
+  it('treats backslash as a literal character in search', async () => {
+    await repo.create(VALID_DTO);
+    const result = await repo.findPage(1, 20, '\\');
+    expect(result.total).toBe(0);
+    expect(result.employees).toHaveLength(0);
+  });
 });
