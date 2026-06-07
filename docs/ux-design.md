@@ -129,7 +129,16 @@ Role, Department, Email, Joining Date, and Gender are not shown in the table —
 - Clicking `⋮` opens an AntD `Dropdown` with: **View**, **Edit**, **Delete** (danger color)
 - No inline action buttons on rows
 
-**Pagination**: AntD `Table` built-in, default 20 rows per page, `showSizeChanger: true`, options: 20, 50, 100
+**Table props**: `size="small"` for compact rows. `scroll={{ y: 'calc(100vh - 270px)' }}` so the table body fills the remaining viewport height — no full-page scroll. Table header stays sticky. `pagination={false}` — pagination is handled by `<PaginationBar>`.
+
+**ID sort**: ID column has `sorter: true`, controlled `sortOrder` state (default `'desc'` = newest first), `sortDirections: ['descend', 'ascend']`. Sort is server-side — changing sort triggers a new `GET /api/employees?order=asc|desc` request. No other column is sortable.
+
+**PaginationBar** (`client/src/components/PaginationBar.tsx`): rendered inside the table card below the table. Three zones (flex, space-between):
+- Left: "Rows per page:" label + AntD `Select` (options 20, 50, 100; width 72px; size small)
+- Center: range text — e.g. `1–20 of 10,247`
+- Right: prev (`LeftOutlined`) and next (`RightOutlined`) AntD icon buttons (size small); prev disabled when `page === 1`, next disabled when `page * pageSize >= total`
+
+Changing rows-per-page resets page to 1.
 
 ### 5.2 Employee Form Modal (Create / View / Edit)
 

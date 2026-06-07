@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Table, Button, Dropdown, Tag, Modal, message, Alert, Input } from 'antd';
 import { MoreOutlined, PlusOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
+import type { SorterResult } from 'antd/es/table/interface';
 import { useEmployees } from '../hooks/useEmployees';
 import { useDeleteEmployee } from '../hooks/useDeleteEmployee';
 import EmployeeForm from '../components/EmployeeForm';
 import ImportCsvModal from '../components/ImportCsvModal';
+import PaginationBar from '../components/PaginationBar';
 import type { Employee } from '../types/employee';
 import { getCurrencySymbol } from '../utils/currency';
 
@@ -18,9 +20,9 @@ export default function EmployeesPage() {
   const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [modalState, setModalState] = useState<ModalState>({ open: false });
   const [importOpen, setImportOpen] = useState(false);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const { data, isLoading, isError } = useEmployees(page, pageSize, search, sortOrder);
   const deleteMutation = useDeleteEmployee();
 
@@ -54,8 +56,25 @@ export default function EmployeesPage() {
     });
   }
 
+  function handleTableChange(
+    _: unknown,
+    __: unknown,
+    sorter: SorterResult<Employee> | SorterResult<Employee>[],
+  ) {
+    const s = Array.isArray(sorter) ? sorter[0] : sorter;
+    setSortOrder(s.order === 'ascend' ? 'asc' : 'desc');
+    setPage(1);
+  }
+
   const columns = [
-    { title: 'ID', dataIndex: 'id', key: 'id' },
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      sorter: true,
+      sortOrder: (sortOrder === 'asc' ? 'ascend' : 'descend') as 'ascend' | 'descend',
+      sortDirections: ['descend' as const, 'ascend' as const],
+    },
     { title: 'Name', dataIndex: 'name', key: 'name' },
     { title: 'Country', dataIndex: 'country', key: 'country' },
     {
@@ -137,18 +156,18 @@ export default function EmployeesPage() {
           dataSource={employees}
           columns={columns}
           rowKey="id"
+          size="small"
           loading={isLoading}
-          pagination={{
-            current: page,
-            pageSize,
-            total,
-            onChange: (newPage, newPageSize) => {
-              setPage(newPage);
-              setPageSize(newPageSize);
-            },
-            showSizeChanger: true,
-            pageSizeOptions: [20, 50, 100],
-          }}
+          pagination={false}
+          scroll={{ y: 'calc(100vh - 270px)' }}
+          onChange={handleTableChange as any}
+        />
+        <PaginationBar
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
         />
       </div>
       <ImportCsvModal open={importOpen} onClose={() => setImportOpen(false)} />
