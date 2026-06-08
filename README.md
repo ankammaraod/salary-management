@@ -17,7 +17,7 @@ Fastest path is Docker:
 ```bash
 docker build -t salary-management .
 docker run -p 3000:3000 salary-management
-# visit http://localhost:3000
+# visit http://localhost:3000 — serves the full app (React frontend + API)
 ```
 
 The container runs migrations, seeds 10,000 employees, then starts the server on each boot.
