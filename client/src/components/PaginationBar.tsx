@@ -29,10 +29,10 @@ export default function PaginationBar({ page, pageSize, total, onPageChange, onP
           size="small"
         />
       </div>
-      <span style={{ fontSize: 13 }}>
-        {total === 0 ? '0 of 0' : `${start}–${end} of ${total.toLocaleString()}`}
-      </span>
-      <div style={{ display: 'flex', gap: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 13 }}>
+          {total === 0 ? '0 of 0' : `${start}–${end} of ${total.toLocaleString()}`}
+        </span>
         <Button
           icon={<LeftOutlined />}
           size="small"
