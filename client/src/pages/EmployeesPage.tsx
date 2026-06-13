@@ -134,7 +134,7 @@ export default function EmployeesPage() {
   if (isError) return <Alert type="error" message="Failed to load employees" style={{ margin: 24 }} />;
 
   return (
-    <div style={{ maxWidth: 'min(900px, 80vw)', margin: '0 auto' }}>
+    <div style={{ maxWidth: 900, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <span style={{ fontSize: 20, fontWeight: 700 }}>Employees</span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -143,7 +143,7 @@ export default function EmployeesPage() {
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             onSearch={handleSearch}
-            style={{ width: 320 }}
+            style={{ flex: 1, minWidth: 160, maxWidth: 320 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal('create', null)}>
             New Employee
@@ -166,7 +166,7 @@ export default function EmployeesPage() {
           size="small"
           loading={isLoading}
           pagination={false}
-          scroll={{ y: TABLE_SCROLL_Y }}
+          scroll={{ x: 'max-content', y: TABLE_SCROLL_Y }}
           onChange={handleTableChange as any}
         />
         <PaginationBar

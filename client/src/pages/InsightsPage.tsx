@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Select, Card, Statistic, Table, Spin, Alert, Typography } from 'antd';
-import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCountries, useInsights } from '../hooks/useInsights';
 import { getCurrencySymbol } from '../utils/currency';
 import type { ColumnsType } from 'antd/es/table';
@@ -61,7 +61,7 @@ export default function InsightsPage() {
     : [];
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ maxWidth: 'min(900px, 90vw)', margin: '0 auto' }}>
       <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
         <Title level={2} style={{ margin: 0 }}>Salary Insights</Title>
         <Select
@@ -92,46 +92,50 @@ export default function InsightsPage() {
 
         {country && insights && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ display: 'flex', gap: 16 }}>
-              <Card style={{ flex: 1 }}>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <Card style={{ flex: 1, minWidth: 130 }}>
                 <Statistic title="Headcount" value={insights.headcount.toLocaleString()} />
               </Card>
-              <Card style={{ flex: 1 }}>
+              <Card style={{ flex: 1, minWidth: 130 }}>
                 <Statistic title="Avg Salary" value={formatSalary(insights.avgSalary)} />
               </Card>
-              <Card style={{ flex: 1 }}>
+              <Card style={{ flex: 1, minWidth: 130 }}>
                 <Statistic title="Min Salary" value={formatSalary(insights.minSalary)} />
               </Card>
-              <Card style={{ flex: 1 }}>
+              <Card style={{ flex: 1, minWidth: 130 }}>
                 <Statistic title="Max Salary" value={formatSalary(insights.maxSalary)} />
               </Card>
-              <Card style={{ flex: 1 }}>
+              <Card style={{ flex: 1, minWidth: 130 }}>
                 <Statistic title="Total Payroll" value={formatPayroll(insights.totalPayroll)} />
               </Card>
             </div>
 
-            <div style={{ display: 'flex', gap: 16 }}>
-              <Card title="Gender Breakdown" style={{ flex: 1 }}>
-                <PieChart width={320} height={220}>
-                  <Pie data={genderData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
-                    {genderData.map((entry) => (
-                      <Cell key={entry.name} fill={GENDER_COLORS[entry.name] ?? '#cccccc'} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <Card title="Gender Breakdown" style={{ flex: 1, minWidth: 260 }}>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie data={genderData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
+                      {genderData.map((entry) => (
+                        <Cell key={entry.name} fill={GENDER_COLORS[entry.name] ?? '#cccccc'} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
               </Card>
-              <Card title="Employment Type" style={{ flex: 1 }}>
-                <PieChart width={320} height={220}>
-                  <Pie data={employmentData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
-                    {employmentData.map((entry) => (
-                      <Cell key={entry.name} fill={EMPLOYMENT_COLORS[entry.name] ?? '#cccccc'} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
+              <Card title="Employment Type" style={{ flex: 1, minWidth: 260 }}>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie data={employmentData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
+                      {employmentData.map((entry) => (
+                        <Cell key={entry.name} fill={EMPLOYMENT_COLORS[entry.name] ?? '#cccccc'} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
               </Card>
             </div>
 
